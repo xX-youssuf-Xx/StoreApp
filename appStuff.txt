@@ -1,0 +1,16 @@
+importanct for building 
+
+keystore password : StoreApp1234#
+
+What is your first and last name?
+  [Youssuf Hosameldin]:
+What is the name of your organizational unit?
+  [Joe]:
+What is the name of your organization?
+  [Joe]:
+What is the name of your City or Locality?
+  [Dakahlia]:
+What is the name of your State or Province?
+  [Mansoura]:
+What is the two-letter country code for this unit?
+  [20]:
