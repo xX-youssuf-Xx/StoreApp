@@ -1,16 +1,17 @@
-importanct for building 
+important for building 
 
-keystore password : StoreApp1234#
+Application project name: StoreApp
+App name: elBaraka
+Passwords: StoreApp1234$$
 
-What is your first and last name?
-  [Youssuf Hosameldin]:
+  [Unknown]:  Youssuf Hosameldin
 What is the name of your organizational unit?
-  [Joe]:
+  [Unknown]:  Joe
 What is the name of your organization?
-  [Joe]:
+  [Unknown]:  Joe
 What is the name of your City or Locality?
-  [Dakahlia]:
+  [Unknown]:  Dakahlia
 What is the name of your State or Province?
-  [Mansoura]:
+  [Unknown]:  Mansoura
 What is the two-letter country code for this unit?
-  [20]:
+  [Unknown]:  EG
