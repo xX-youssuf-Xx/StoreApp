@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640816735108",
+    "project_id": "storeapp-44934",
+    "storage_bucket": "storeapp-44934.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640816735108:android:1b582095e0f178f325f3d1",
+        "android_client_info": {
+          "package_name": "com.omar.store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIm2xmmq6oPjs75FiBuVlTnJid9bpR9Ak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
