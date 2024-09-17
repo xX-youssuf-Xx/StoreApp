@@ -1,4 +1,4 @@
-package com.storeapp
+package com.omar.store
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

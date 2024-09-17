@@ -1,0 +1,13 @@
+{
+    "users" : {
+        "Omar"   : {
+            "active": true,
+            "last_backup": 0
+        },
+        "Osama"   : {
+            "active": false,
+            "last_backup": 0
+        }
+    },
+    "last_backup": 0
+}

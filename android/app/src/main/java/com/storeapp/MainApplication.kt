@@ -1,4 +1,4 @@
-package com.storeapp
+package com.omar.store
 
 import android.app.Application
 import com.facebook.react.PackageList
