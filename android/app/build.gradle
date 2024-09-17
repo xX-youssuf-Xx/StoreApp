@@ -94,7 +94,7 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-         release {
+        release {
             storeFile file(ELBARAKA_RELEASE_STORE_FILE)
             storePassword ELBARAKA_RELEASE_STORE_PASSWORD
             keyAlias ELBARAKA_RELEASE_KEY_ALIAS

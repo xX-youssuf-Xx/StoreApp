@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Button } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import NavBar from '../components/NavBar';
+import { useFirebase } from '../context/FirebaseContext';
 
 // Define your route types (you can replace 'Home', 'Profile', etc. with your actual route names)
 type RootStackParamList = {
@@ -17,6 +18,11 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { db, goOffline } = useFirebase();
+
+  useEffect(() => {
+    goOffline();
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>
