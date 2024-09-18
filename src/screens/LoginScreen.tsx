@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
-import NavBar from '../components/NavBar';
 import { setItem } from '../utils/localStorage';
 import { addUser, getActiveUser, getUser, setActiveUser } from '../utils/auth';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR } from '../config/Constants';
 import { useFirebase } from '../context/FirebaseContext';
 
-const ProfileScreen = () => {
+const LoginScreen = () => {
   const [name, setName] = useState(); 
   const { db } = useFirebase(); 
 
@@ -55,7 +54,6 @@ const ProfileScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <NavBar title="Profile" />
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Profile Screen</Text>
       </View>
@@ -63,4 +61,5 @@ const ProfileScreen = () => {
   );
 };
 
-export default ProfileScreen;
+
+export default LoginScreen;

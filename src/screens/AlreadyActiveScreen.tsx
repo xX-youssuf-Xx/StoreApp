@@ -2,14 +2,14 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import NavBar from '../components/NavBar';
 
-const FoodStorageScreen = () => {
+const AlreadyActiveScreen = () => {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Food Storage Screen</Text>
+        <Text>AlreadyActiveScreen</Text>
       </View>
     </View>
   );
 };
 
-export default FoodStorageScreen;
+export default AlreadyActiveScreen;

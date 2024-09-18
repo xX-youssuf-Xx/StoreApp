@@ -5,7 +5,6 @@ import NavBar from '../components/NavBar';
 const ClientsScreen = () => {
   return (
     <View style={{ flex: 1 }}>
-      <NavBar title="Clients" />
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Clients Screen</Text>
       </View>
