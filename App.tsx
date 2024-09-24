@@ -100,6 +100,9 @@ const App: React.FC = () => {
           <Drawer.Screen name="FoodStorage" component={FoodStorageScreen} />
         </Drawer.Navigator>
       </NavigationContainer>
+      {
+      
+      }
     </GestureHandlerRootView>
   );
 };
