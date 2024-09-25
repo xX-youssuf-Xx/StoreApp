@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {SafeAreaView, StyleSheet} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createStackNavigator} from '@react-navigation/stack';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import LottieView from 'lottie-react-native';
 import FlashMessage, {showMessage} from 'react-native-flash-message';
@@ -16,8 +17,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import NoActiveScreen from './src/screens/NoActiveScreen';
 
 // Components
-import NavBar from './src/components/NavBar';
-import CustomTabBar from './src/components/CustomTabBar';
+import BottomTabBar from './src/components/BottomTabBar';
 import {getItem, setItem} from './src/utils/localStorage';
 import {getActiveUser, setActiveUser} from './src/utils/auth';
 import {FIREBASE_ERROR} from './src/config/Constants';
@@ -26,59 +26,79 @@ import {useFirebase} from './src/context/FirebaseContext';
 import {useLoading} from './src/context/LoadingContext';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+const TabNavigator = () => {
+  console.log('Rendering TabNavigator');
+  return (
+    <Tab.Navigator
+      tabBar={props => <BottomTabBar {...props} />}
+      screenOptions={{headerShown: false}}
+      initialRouteName="الرئيسية"
+    >
+      <Tab.Screen name="المخزن" component={FoodStorageScreen} />
+      <Tab.Screen name="الحساب الشخصي" component={ProfileScreen} />
+      <Tab.Screen name="العملاء" component={ClientsScreen} />
+      <Tab.Screen name="الرئيسية" component={HomeScreen} />
+    </Tab.Navigator>
+  );
+};
 
 const App: React.FC = () => {
+  console.log('Rendering App component');
   const {forceLoading, setForceLoading} = useLoading();
   const {db} = useFirebase();
-  const [initialScreen, setInitialScreen] = useState<string | null>(''); // Used to determine the initial screen
+  const [initialScreen, setInitialScreen] = useState<string | null>(null);
 
   const checkAuth = async () => {
+    console.log('Starting checkAuth');
     try {
-      // CHECK IF THERE IS A NAME IN THE STORAGE
       const name = await getItem('name');
+      console.log('Retrieved name from storage:', name);
       if (!name) {
-        // JOE: GO TO LOGIN PAGE
+        console.log('No name found, setting initialScreen to Login');
         setInitialScreen('Login');
-        return true;
+        return;
       }
 
-      // CHECK IF ACTIVE FROM STORAGE
       const active = await getItem('active');
+      console.log('Retrieved active status from storage:', active);
       if (active) {
-        // JOE: GO TO HOME
-        setInitialScreen('Home');
-        return true;
+        console.log('Active user found, setting initialScreen to MainTabs');
+        setInitialScreen('MainTabs');
+        return;
       }
 
       const activeUser = await getActiveUser(db!);
+      console.log('Retrieved active user from database:', activeUser);
 
       if (!activeUser) {
+        console.log('No active user in database, attempting to set active user');
         const res = await setActiveUser(db!, name);
         if (res) {
-          // JOE: GO TO THERE IS NO ACTIVE USER, DO YOU WANT TO BE ACTIVE??
+          console.log('Set active user successful, setting initialScreen to NoActiveUser');
           setInitialScreen('NoActiveUser');
-          return true;
+          return;
         }
       }
 
-      if (activeUser.val() === name) {
+      if (activeUser && activeUser.val() === name) {
+        console.log('Current user is active user, setting active status and navigating to MainTabs');
         await setItem('active', true);
-        // JOE: GO TO HOME
-        setInitialScreen('Home');
-        return true;
+        setInitialScreen('MainTabs');
+        return;
       }
 
-      // JOE: GO TO AlreadyActive PAGE (show the user that there is already another user active and they should backup first before being able to work here)
+      console.log('Another user is active, setting initialScreen to AlreadyActive');
       setInitialScreen('AlreadyActive');
-      return true;
     } catch (error) {
+      console.error('Error in checkAuth:', error);
       if (error instanceof FirebaseError) {
         if (error.code === FIREBASE_ERROR) {
-          // JOE: SHOW ERROR MESSAGE THAT THE USER SHOULD TRY AGAIN LATER
           showMessage({
-            message: 'Success',
+            message: 'Error',
             description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
+            type: 'danger',
             duration: 3000,
             floating: true,
             autoHide: true,
@@ -89,18 +109,22 @@ const App: React.FC = () => {
       } else {
         console.error('An unexpected error occurred:', error);
       }
+      console.log('Error occurred, defaulting to Login screen');
+      setInitialScreen('Login');
     }
   };
 
   useEffect(() => {
+    console.log('App useEffect triggered');
     checkAuth();
   }, []);
 
-  // Show the Lottie splash screen if forceLoading or initial screen hasn't been determined
+  console.log('Current initialScreen:', initialScreen);
+
   if (forceLoading || initialScreen === null) {
+    console.log('Rendering loading screen');
     return (
       <SafeAreaView style={styles.splashContainer}>
-        {/* JOE: LOADING SCREEN */}
         <LottieView
           source={require('./assets/lotties/splashScreen.json')}
           autoPlay
@@ -111,24 +135,21 @@ const App: React.FC = () => {
     );
   }
 
+  console.log('Rendering main navigation structure');
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
-      <NavigationContainer>
-        {/* NavBar is always displayed at the top */}
-
-        {/* Bottom Tab Navigator */}
-        <Tab.Navigator
-          initialRouteName={initialScreen} // Renders the initial screen based on the logic
-          tabBar={props => <CustomTabBar {...props} />} // Custom bottom tab like WhatsApp
-          screenOptions={{headerShown: false}}>
-          <Tab.Screen name="المخزن" component={FoodStorageScreen} />
-          <Tab.Screen name="الحساب الشخصي" component={ProfileScreen} />
-          <Tab.Screen name="العملاء" component={ClientsScreen} />
-          <Tab.Screen name="الرئيسية" component={HomeScreen} />
-          <FlashMessage position="top" />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <>
+      <GestureHandlerRootView style={{flex: 1}}>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName={initialScreen}>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="AlreadyActive" component={AlreadyActiveScreen} />
+            <Stack.Screen name="NoActiveUser" component={NoActiveScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+      <FlashMessage position="top" />
+    </>
   );
 };
 
@@ -137,7 +158,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000', // Black background for the splash screen
+    backgroundColor: '#000',
   },
   lottie: {
     width: '117%',

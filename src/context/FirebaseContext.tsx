@@ -78,7 +78,7 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
         {/* JOE: LOADING SCREEN */}
         <SafeAreaView style={styles.splashContainer}>
           <LottieView
-            source={require('./assets/lotties/splashScreen.json')}
+            source={require('../../assets/lotties/splashScreen.json')}
             autoPlay
             loop
             style={styles.lottie}
