@@ -1,5 +1,6 @@
 // src/context/LoadingContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import Loading from '../components/Loading';
 
 interface LoadingContextType {
   isLoading: boolean;
@@ -16,12 +17,14 @@ interface LoadingProviderProps {
 
 export const LoadingProvider = ({ children }: LoadingProviderProps) => {
   const [isLoading, setIsLoadin] = useState(false);
-  const [forceLoading, setForceLoading] = useState(true);
+  const [forceLoading, setForceLoading] = useState(false);
 
   return (
     <LoadingContext.Provider value={{ isLoading, setIsLoadin, forceLoading, setForceLoading }}>
       {children}
       {/* JOE: SHOW LOADING OVERLAY */}
+      <Loading isVisible={isLoading ||forceLoading } />
+
     </LoadingContext.Provider>
   );
 };
