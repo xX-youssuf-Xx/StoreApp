@@ -2,54 +2,58 @@ import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
 import { attemptFirebaseGet, attemptFirebasePush } from "./firebase";
 import { FIREBASE_ERROR, REQUEST_LIMIT } from "../config/Constants";
 import { FirebaseError } from "../errors/FirebaseError";
+import { Product, ProuctsType } from "./types";
 
-export const getAllProducts = async (database: FirebaseDatabaseTypes.Module) => {
+export const getAllProducts = async (database: FirebaseDatabaseTypes.Module) : Promise<ProuctsType> => {
     const products = await attemptFirebaseGet(database, '/inventory', REQUEST_LIMIT);
     if(products === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }
-    return products;
+    return products.val();
 }
 
-export const getProduct = async (database: FirebaseDatabaseTypes.Module, productName: string) => {
-    const products = await attemptFirebaseGet(database, `/inventory/${productName}`, REQUEST_LIMIT);
-    if(products === FIREBASE_ERROR) {
+export const getProduct = async (database: FirebaseDatabaseTypes.Module, productName: string) : Promise<Product> => {
+    const product = await attemptFirebaseGet(database, `/inventory/${productName}`, REQUEST_LIMIT);
+    if(product === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }
-    return products;
+    return product.val();
 }
 
 export const createProduct = async (database: FirebaseDatabaseTypes.Module, 
     productName: string, 
     isStatic: Boolean = false, 
-    boxWeight: number = 0, 
     isQrable: Boolean = false, 
-    qrData: {
+    boxWeight: number = 0, 
+    qrData: ({
         from: number,
         intLength: number,
         floatLength: number
-    }) => {
-    const products = await attemptFirebasePush(database, `/inventory`, productName, {
+    } | {}) = {}) : Promise<Boolean> => {
+    const res = await attemptFirebasePush(database, `/inventory`, productName, {
         isStatic: isStatic,
         boxWeight: boxWeight,
         isQrable: isQrable,
         items: {},
         qrData: qrData
     }, REQUEST_LIMIT);
-    if(products === FIREBASE_ERROR) {
+    if(res === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }
-    return products;
+    return res;
 }
 
-export const importItem = async (database: FirebaseDatabaseTypes.Module, productName: string, boughtPrice: number, weight: number) => {
-    const products = await attemptFirebasePush(database, `/inventory/${productName}`, null, {
+export const createItems = async (database: FirebaseDatabaseTypes.Module, 
+    productName: string, 
+    boughtPrice: number, 
+    weight: number) : Promise<Boolean> => {
+    const res = await attemptFirebasePush(database, `/inventory/${productName}/items`, null, {
         boughtPrice: boughtPrice,
         weight: weight,
-        totalWeight: weight,
+        totalWeight: weight
     }, REQUEST_LIMIT);
-    if(products === FIREBASE_ERROR) {
+    if(res === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }
-    return products;
+    return res;
 }

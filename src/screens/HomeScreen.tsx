@@ -12,7 +12,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     // Go offline when the component mounts
-    goOffline();
+    // goOffline();
   }, []);
 
   const [searchText, setSearchText] = useState('');

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {SafeAreaView, StyleSheet} from 'react-native';
+import {SafeAreaView, StyleSheet, Text} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
@@ -48,7 +48,7 @@ const App: React.FC = () => {
   console.log('Rendering App component');
   const {forceLoading, setForceLoading} = useLoading();
   const {db} = useFirebase();
-  const [initialScreen, setInitialScreen] = useState<string | null>(null);
+  const [initialScreen, setInitialScreen] = useState<string | null>("MainTabs");
 
   const checkAuth = async () => {
     console.log('Starting checkAuth');
@@ -57,7 +57,7 @@ const App: React.FC = () => {
       console.log('Retrieved name from storage:', name);
       if (!name) {
         console.log('No name found, setting initialScreen to Login');
-        setInitialScreen('Login');
+        setInitialScreen("Login");
         return;
       }
 
@@ -116,7 +116,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     console.log('App useEffect triggered');
-    checkAuth();
+    // checkAuth();
   }, []);
 
   console.log('Current initialScreen:', initialScreen);
@@ -152,7 +152,7 @@ const App: React.FC = () => {
     </>
   );
 };
-
+  
 const styles = StyleSheet.create({
   splashContainer: {
     flex: 1,

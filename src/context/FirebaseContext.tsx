@@ -44,7 +44,7 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
       await new Promise(resolve => setTimeout(() => resolve, 10000));
       await setItem('active', false);
       await emptyActiveUser(database);
-      await goOffline();
+      // await goOffline();
       return true;
     } catch (e) {
       console.log('ERROR');

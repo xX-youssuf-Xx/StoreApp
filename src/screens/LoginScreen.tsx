@@ -23,7 +23,7 @@ import MobileLogin from '../../assets/images/MobileLogin.svg';
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const navigation = useNavigation<NavigationProp<any>>();
   const { db } = useFirebase();
 
@@ -64,7 +64,7 @@ const LoginScreen = () => {
         }
       }
 
-      if (activeUser.val() === name) {
+      if (activeUser === name) {
         await setItem('active', true);
         navigation.navigate('MainTabs');
         return true;
@@ -86,11 +86,9 @@ const LoginScreen = () => {
     }
   };
 
-
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
@@ -107,7 +105,8 @@ const LoginScreen = () => {
                 style={styles.input}
                 placeholder="أدخل اسمك هنا"
                 value={name}
-                placeholderTextColor="#666"
+
+                placeholderTextColor='#666'
                 onChangeText={handleNameChange}
                 textAlign="right"
               />

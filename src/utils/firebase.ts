@@ -1,4 +1,4 @@
-import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
+import { FirebaseDatabaseTypes, set } from "@react-native-firebase/database";
 import { FIREBASE_ERROR } from "../config/Constants";
 
 export const attemptFirebaseUpdate = async (
@@ -33,10 +33,10 @@ export const attemptFirebaseGet = async (
         const snapShot = await database.ref(ref).once('value');
         return snapShot; 
     } catch (e) {
-        console.log("Error updating item", e);
+        console.log("Error getting item", e);
 
         if (times > 0) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             return await attemptFirebaseGet(database, ref, times - 1);
         } else {
@@ -57,8 +57,7 @@ export const attemptFirebasePush = async (
             const newRef = database.ref(ref).push();
             await newRef.set(value);
         } else {
-            const newRef = database.ref(ref).push(key);
-            await newRef.set(value);
+            await database.ref(`${ref}/${key}`).set(value);
         }
         return true; 
     } catch (e) {
