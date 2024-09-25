@@ -1,14 +1,19 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import NavBar from '../components/NavBar';
-import { getAllProducts } from '../utils/inventory';
+import {View, Text} from 'react-native';
+import TopNav from '../../src/components/TopNav';
+import React, {useEffect, useState} from 'react';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
-import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR } from '../config/Constants';
+import { FirebaseError } from '../errors/FirebaseError';
 import { showMessage } from 'react-native-flash-message';
+import { getAllProducts } from '../utils/inventory';
 
 const FoodStorageScreen = () => {
+  const navigation = useNavigation<NavigationProp<any>>();
+  const [searchText, setSearchText] = useState('');
   const {db} = useFirebase();
+
+
 
   const getAllItems = async () => {
     try {
@@ -34,12 +39,37 @@ const FoodStorageScreen = () => {
     }
   }
 
+  const handleSettingsPress = () => {
+    // Handle settings press
+    console.log('Settings pressed');
+  };
+
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    // Perform search operation with the text
+    console.log('Searching for:', text);
+  };
+
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Food Storage Screen</Text>
+    <>
+      <TopNav
+        title="المخزن"
+        onSettingsPress={handleSettingsPress}
+        onSearchChange={handleSearchChange}
+        onBackPress={handleBackPress}
+        showBackButton={false}
+        showSearchIcon={true}
+      />
+      <View style={{flex: 1}}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text>Food Storage Screen</Text>
+        </View>
       </View>
-    </View>
+    </>
   );
 };
 
