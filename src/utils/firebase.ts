@@ -5,7 +5,7 @@ export const attemptFirebaseUpdate = async (
     database: FirebaseDatabaseTypes.Module, 
     ref: string, 
     key: string, 
-    val: string | boolean | object, 
+    val: string | boolean | object | number, 
     times: number
 ): Promise<true | typeof FIREBASE_ERROR> => {
     try {
@@ -51,15 +51,20 @@ export const attemptFirebasePush = async (
     key: string | null, 
     value: any,
     times: number
-): Promise<true | typeof FIREBASE_ERROR> => {
+): Promise<false | string | typeof FIREBASE_ERROR> => {
     try {
         if(key === null) {
             const newRef = database.ref(ref).push();
             await newRef.set(value);
+            if(newRef.key) {
+                return newRef.key; 
+            }
+            else
+                return false;
         } else {
             await database.ref(`${ref}/${key}`).set(value);
+            return key; 
         }
-        return true; 
     } catch (e) {
         console.log("Error updating item", e);
 

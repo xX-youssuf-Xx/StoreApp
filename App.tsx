@@ -82,7 +82,7 @@ const App: React.FC = () => {
         }
       }
 
-      if (activeUser && activeUser.val() === name) {
+      if (activeUser && activeUser === name) {
         console.log('Current user is active user, setting active status and navigating to MainTabs');
         await setItem('active', true);
         setInitialScreen('MainTabs');

@@ -8,11 +8,12 @@ import { clearStorage } from '../utils/localStorage';
 // Define the type for navigation prop
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
-  const {goOffline} = useFirebase();
+  const {goOffline, backup} = useFirebase();
 
   useEffect(() => {
     // Go offline when the component mounts
     // goOffline();
+    backup();
   }, []);
 
   const [searchText, setSearchText] = useState('');
