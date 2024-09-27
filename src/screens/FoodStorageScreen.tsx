@@ -1,4 +1,4 @@
-import {View, Text} from 'react-native';
+import {View, Text , StyleSheet , Button} from 'react-native';
 import TopNav from '../../src/components/TopNav';
 import React, {useEffect, useState} from 'react';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
@@ -8,6 +8,9 @@ import { FirebaseError } from '../errors/FirebaseError';
 import { showMessage } from 'react-native-flash-message';
 import { createItems, createProduct, getAllProducts, getProduct } from '../utils/inventory';
 import { getActiveUser } from '../utils/auth';
+import QrReader from '../components/QrReader';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
 
 const FoodStorageScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -19,6 +22,7 @@ const FoodStorageScreen = () => {
       const products = await getAllProducts(db!);
       if(products) {
         // JOE: SET THE PRODUCTS
+        console.log(products.كبدة.items);
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -127,6 +131,7 @@ const FoodStorageScreen = () => {
   }
 
   useEffect(() => {
+    getInventory();
     // getProductDetails('كبدة');
     // newProduct('كبدة');
     // importItem('كبدة', 209, 12);
@@ -147,6 +152,15 @@ const FoodStorageScreen = () => {
     navigation.goBack();
   };
 
+
+
+  const [isQrReaderVisible, setIsQrReaderVisible] = useState(false);
+  const [scannedCodes, setScannedCodes] = useState<string[]>([]);
+
+  const handleScan = (data: string[]) => {
+    setScannedCodes(data);
+  };
+
   return (
     <>
       <TopNav
@@ -157,13 +171,39 @@ const FoodStorageScreen = () => {
         showBackButton={false}
         showSearchIcon={true}
       />
-      <View style={{flex: 1}}>
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <Text>Food Storage Screen</Text>
-        </View>
-      </View>
+    <View>
+      <Button title="Open QR Scanner" onPress={() => setIsQrReaderVisible(true)} />
+      <QrReader
+        isVisible={isQrReaderVisible}
+        onClose={() => setIsQrReaderVisible(false)}
+        onScan={handleScan}
+      />
+      <Text>Scanned Codes:</Text>
+      {scannedCodes.map((code, index) => (
+        <Text key={index}>{code}</Text>
+      ))}
+    </View>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  resultText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+});
 
 export default FoodStorageScreen;
