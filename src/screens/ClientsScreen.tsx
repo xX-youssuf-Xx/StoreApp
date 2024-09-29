@@ -236,7 +236,8 @@ const ClientsScreen = () => {
           "-O7dw9t7IuJ04vnhGyw4": 7
         }
       }
-    }); */
+    }, "", () => {}); */
+    getReceiptDetails("-O7xTrRux7Lee5pgxsUz");
   }, []);
 
   const handleSettingsPress = () => {

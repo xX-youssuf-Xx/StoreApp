@@ -47,9 +47,10 @@ export type ReceiptProduct = {
 
 export type Receipt = {
     client: string,
-    initialClientsBalance: number,
+    initialBalance: number,
     totalPrice: number,
-    amountPaid: number,
+    createdAt: string,
+    moneyPaid: number,
     products: {
         [product: string]: ReceiptProduct
     }
