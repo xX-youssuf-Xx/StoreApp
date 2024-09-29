@@ -9,13 +9,58 @@ export type Item = {
     weight: number,
 }
 
+export type qrDataType = {
+    from: number,
+    intLength: number,
+    floatLength: number
+}
+
 export type Product = {
     boxWeight: number, 
     isQrable: Boolean, 
     isStatic: Boolean,
-    items: Item[]
+    items: Item[],
+    qrData?: qrDataType
 }
 
 export type ProuctsType = {
     [key: string]: Product;
+}
+
+export type Client = {
+    receipts: {}
+    name: string, 
+    number: string,
+    balance: number
+}
+
+export type ClientsType = {
+    [key: string]: Client;
+}
+
+export type ReceiptProduct = {
+    sellPrice: number,
+    totalWeight?: number,
+    items: {
+        [itemId: string]: number
+    }
+}
+
+export type Receipt = {
+    id: string
+    client: string,
+    initialBalance: number,
+    totalPrice: number,
+    moneyPaid: number,
+    products: {
+        [product: string]: ReceiptProduct
+    }
+}
+
+export type ReceiptsType = {
+    [key: string]: Receipt;
+}
+
+export type productsReceiptQuery = {
+    [productName: string]: ReceiptProduct
 }

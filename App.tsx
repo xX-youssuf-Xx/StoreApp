@@ -24,6 +24,7 @@ import {FIREBASE_ERROR} from './src/config/Constants';
 import {FirebaseError} from './src/errors/FirebaseError';
 import {useFirebase} from './src/context/FirebaseContext';
 import {useLoading} from './src/context/LoadingContext';
+import ClientDetailsScreen from './src/screens/ClientDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -48,7 +49,7 @@ const App: React.FC = () => {
   console.log('Rendering App component');
   const {forceLoading, setForceLoading} = useLoading();
   const {db} = useFirebase();
-  const [initialScreen, setInitialScreen] = useState<string | null>("MainTabs");
+  const [initialScreen, setInitialScreen] = useState<string | null>(null);
 
   const checkAuth = async () => {
     console.log('Starting checkAuth');
@@ -82,7 +83,7 @@ const App: React.FC = () => {
         }
       }
 
-      if (activeUser === name) {
+      if (activeUser && activeUser === name) {
         console.log('Current user is active user, setting active status and navigating to MainTabs');
         await setItem('active', true);
         setInitialScreen('MainTabs');
@@ -116,7 +117,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     console.log('App useEffect triggered');
-    // checkAuth();
+    checkAuth();
   }, []);
 
   console.log('Current initialScreen:', initialScreen);
@@ -145,6 +146,7 @@ const App: React.FC = () => {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="AlreadyActive" component={AlreadyActiveScreen} />
             <Stack.Screen name="NoActiveUser" component={NoActiveScreen} />
+            <Stack.Screen name="ClientDetails" component={ClientDetailsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </GestureHandlerRootView>

@@ -30,6 +30,7 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
     .database(
       'https://storeapp-44934-default-rtdb.europe-west1.firebasedatabase.app',
     );
+
   database.setPersistenceEnabled(true);
 
   const goOffline = async () => {

@@ -25,7 +25,7 @@ const AlreadyActiveScreen = () => {
       try {
         const activeUser = await getActiveUser(db!);
         if (activeUser) {
-          setActiveName(activeUser.val());
+          setActiveName(activeUser);
         }
       } catch (error) {
         console.error('Error fetching active user:', error);
