@@ -7,6 +7,7 @@ export type Item = {
     boughtPrice: number, 
     totalWeight: number,
     weight: number,
+    importedAt: string
 }
 
 export type qrDataType = {

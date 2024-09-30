@@ -43,3 +43,16 @@ export const emptyActiveUser = async (database: FirebaseDatabaseTypes.Module) : 
     }
     return true;
 }
+
+export const updateAdminBalance = async (database: FirebaseDatabaseTypes.Module, amount: number): Promise<Boolean> => {
+    const balance = await attemptFirebaseGet(database, '/balance', REQUEST_LIMIT);
+    if (balance === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+    
+    const res = await attemptFirebaseUpdate(database, `/`, 'balance', balance.val() + amount, REQUEST_LIMIT);
+    if (res === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+    return res;
+}

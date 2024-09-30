@@ -216,27 +216,14 @@ const ClientsScreen = () => {
         console.error('An unexpected error occurred:', error);
       }
     }
-  };
-
-  const createReceipt = async (
-    clientUuid: string,
-    moneyPaid: number,
-    products: productsReceiptQuery,
-    pdfPath: string,
-    uploadStateChange: (bytesTransferred: number, totalBytes: number) => void,
-  ) => {
+  }
+  
+  const createReceipt = async (clientUuid: string, moneyPaid: number, pdfPath: string, uploadStateChange: (bytesTransferred: number, totalBytes: number) => void, products?: productsReceiptQuery) => {
     try {
-      const receiptUuid = await createReceiptHelper(
-        db!,
-        clientUuid,
-        moneyPaid,
-        products,
-        pdfPath,
-        uploadStateChange,
-      );
-      if (receiptUuid) {
-        console.log('receiptUuid');
-        console.log(receiptUuid);
+      const receiptUuid = await createReceiptHelper(db!, clientUuid, moneyPaid, pdfPath, uploadStateChange, products);
+      if(receiptUuid) {
+        console.log("receiptUuid");
+        console.log(receiptUuid); 
         // JOE: SET THE receipt
       }
     } catch (error) {
@@ -281,6 +268,8 @@ const ClientsScreen = () => {
     // getClientReceipts('-O7hoaCp0zkpTN1XCsYR');
     getReceiptDetails('-O7j1d0q4Yp6Ut4ZYf3q');
     getReceiptDetails("-O7xTrRux7Lee5pgxsUz");
+    // createReceipt("-O7hoaCp0zkpTN1XCsYR", 2000, "", () => {}, {});
+    // getReceiptDetails("-O7xTrRux7Lee5pgxsUz");
   }, []);
 
   const handleSettingsPress = () => {

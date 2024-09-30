@@ -3,6 +3,7 @@ import { attemptFirebaseGet, attemptFirebasePush } from "./firebase";
 import { FIREBASE_CREATING_ERROR, FIREBASE_ERROR, REQUEST_LIMIT } from "../config/Constants";
 import { FirebaseError } from "../errors/FirebaseError";
 import { Item, Product, ProuctsType, qrDataType } from "./types";
+import { updateAdminBalance } from "./auth";
 
 export const getAllProducts = async (database: FirebaseDatabaseTypes.Module) : Promise<ProuctsType> => {
     const products = await attemptFirebaseGet(database, '/inventory', REQUEST_LIMIT);
@@ -74,7 +75,8 @@ export const createItems = async (database: FirebaseDatabaseTypes.Module,
         boughtPrice: boughtPrice,
         weight: weight,
         totalWeight: weight,
-        qrString: qrString
+        qrString: qrString,
+        importedAt: (new Date()).toISOString()
     }, REQUEST_LIMIT);
     if(res === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
@@ -82,5 +84,11 @@ export const createItems = async (database: FirebaseDatabaseTypes.Module,
     if(res === false) {
         throw new FirebaseError(FIREBASE_CREATING_ERROR);
     }
+
+    const balanceRes = await updateAdminBalance(database, - boughtPrice * weight);
+    if(!balanceRes) {
+        throw new FirebaseError(FIREBASE_CREATING_ERROR);
+    }
+
     return res;
 }

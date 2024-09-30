@@ -86,29 +86,35 @@ const ClientDetailsScreen = () => {
     }
   };
 
-  const createReceipt = async (
-    moneyPaid: number,
-    products: productsReceiptQuery,
-    pdfPath: string,
-    uploadStateChange: (bytesTransferred: number, totalBytes: number) => void,
-  ) => {
+  const createReceipt = async (clientUuid: string, moneyPaid: number, pdfPath: string, uploadStateChange: (bytesTransferred: number, totalBytes: number) => void, products?: productsReceiptQuery) => {
     try {
-      const receiptUuid = await createReceiptHelper(
-        db!,
-        client.id,
-        moneyPaid,
-        products,
-        pdfPath,
-        uploadStateChange,
-      );
-      if (receiptUuid) {
-        console.log('New receipt created:', receiptUuid);
-        getClientReceipts(client.id); // Refresh the receipts list
+      const receiptUuid = await createReceiptHelper(db!, clientUuid, moneyPaid, pdfPath, uploadStateChange, products);
+      if(receiptUuid) {
+        console.log("receiptUuid");
+        console.log(receiptUuid); 
+        // JOE: SET THE receipt
       }
     } catch (error) {
-      handleError(error);
+      if (error instanceof FirebaseError) {
+        if (error.code === FIREBASE_ERROR) {
+          console.log('ERROR');
+          showMessage({
+            message: 'Success',
+            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
+            type: 'success',
+            duration: 3000,
+            floating: true,
+            autoHide: true,
+          });
+        } else {
+          console.error('An error occurred with code:', error.code);
+        }
+      } else {
+        console.error('An unexpected error occurred:', error);
+      }
     }
   };
+
 
   const handleError = (error: unknown) => {
     if (error instanceof FirebaseError) {
