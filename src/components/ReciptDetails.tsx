@@ -1,12 +1,4 @@
-// types.ts
-export interface ReceiptProduct {
-  items: {[key: string]: number};
-  sellPrice: number;
-  totalWeight: number;
-}
-
-// ReceiptDetails.tsx
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -14,8 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
-import {Receipt} from '../utils/types';
+import {Receipt, ReceiptProduct} from '../utils/types';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
 interface ReceiptDetailsProps {
   isVisible: boolean;
@@ -28,6 +22,152 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
   onClose,
   receipt,
 }) => {
+  const [expandedProducts, setExpandedProducts] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  const calculateTotal = (product: ReceiptProduct) => {
+        if (!product) return 0;
+        return ((product.totalWeight || 0) * (product.sellPrice || 0)).toFixed(2);
+      };
+      
+      const calculateNetBalance = () => {
+        if (!receipt) return 0;
+        return ((receipt.initialBalance || 0) + (receipt.totalPrice || 0) - (receipt.moneyPaid || 0)).toFixed(2);
+      };
+
+  const toggleProductExpansion = (productName: string) => {
+    setExpandedProducts(prev => ({
+      ...prev,
+      [productName]: !prev[productName],
+    }));
+  };
+
+  const generateReceiptHTML = () => {
+    const productRows = Object.entries(receipt.products)
+      .map(
+        ([productName, product]) => `
+          <div class="product-card">
+            <div class="product-header">
+              <span class="product-weight">الوزن: ${
+                product.totalWeight ?? 'غير محدد'
+              } كجم</span>
+              <span class="product-name">${productName}</span>
+            </div>
+            <div class="product-details">
+              <span class="product-total">${calculateTotal(product)} ج.م</span>
+              <span class="product-price">السعر: ${
+                product.sellPrice
+              } ج.م/كجم</span>
+            </div>
+            <div class="items-container">
+              ${Object.entries(product.items)
+                .map(
+                  ([itemId, weight], index) => `
+                <div class="item-text">القطعة ${
+                  index + 1
+                }  :  ${weight} كجم</div>
+              `,
+                )
+                .join('')}
+            </div>
+          </div>
+        `,
+      )
+      .join('');
+
+    return `
+          <html dir="rtl">
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .title { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+                .text { font-size: 16px; margin-bottom: 10px; }
+                .subtitle { font-size: 20px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; }
+                .product-card { 
+                  background-color: #f9f9f9; 
+                  border-radius: 10px; 
+                  padding: 15px; 
+                  margin-bottom: 15px;
+                }
+                .product-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                .product-name { font-size: 18px; font-weight: bold; }
+                .product-weight { font-size: 14px; color: #666; }
+                .product-details { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                .product-total { font-size: 16px; font-weight: bold; color: #2196F3; }
+                .product-price { font-size: 14px; color: #666; }
+                .items-container { border-top: 1px solid #eee; padding-top: 10px; }
+                .item-text { font-size: 14px; color: #666; margin-bottom: 5px; }
+                .summary { background-color: #f5f5f5; border-radius: 10px; padding: 15px; margin-top: 20px; }
+                .summary-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+                .summary-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                .summary-label { font-size: 14px; color: #666; }
+                .summary-value { font-size: 14px; font-weight: bold; }
+                .net-balance { color: #4CAF50; }
+              </style>
+            </head>
+            <body>
+              <h1 class="title">تفاصيل الإيصال</h1>
+              
+              <p class="text">رقم العميل: ${receipt.client}</p>
+              <p class="text">الرصيد الأولي: ${receipt.initialBalance} ج.م</p>
+      
+              <h2 class="subtitle">المنتجات:</h2>
+      
+              ${productRows}
+      
+              <div class="summary">
+                <p class="summary-text">ملخص الحساب:</p>
+                <div class="summary-row">
+                <span class="summary-label">الرصيد الأولي:</span>
+                  <span class="summary-value">${
+                    receipt.initialBalance
+                  } ج.م</span>
+                </div>
+                <div class="summary-row">
+                <span class="summary-label">إجمالي تكلفة المنتجات:</span>
+                  <span class="summary-value">${receipt.totalPrice} ج.م</span>
+                </div>
+                <div class="summary-row">
+                <span class="summary-label">المبلغ المدفوع:</span>
+                  <span class="summary-value">${receipt.moneyPaid} ج.م</span>
+                </div>
+                <div class="summary-row">
+                <span class="summary-label">الصافي:</span>
+                  <span class="summary-value net-balance">${calculateNetBalance()} ج.م</span>
+                </div>
+              </div>
+            </body>
+          </html>
+        `;
+  };
+
+  const handleGeneratePDF = async () => {
+    try {
+      if (typeof RNHTMLtoPDF.convert !== 'function') {
+        throw new Error('RNHTMLtoPDF.convert is not a function');
+      }
+
+      const options = {
+        html: generateReceiptHTML(),
+        fileName: `receipt_${receipt.client}`,
+        directory: 'Documents',
+      };
+
+      const file = await RNHTMLtoPDF.convert(options);
+
+      if (file.filePath) {
+        console.log('PDF saved to:', file.filePath);
+        Alert.alert('Success', `PDF saved successfully at ${file.filePath}`);
+      } else {
+        throw new Error('PDF file path is undefined');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      Alert.alert('Error', `Failed to generate the PDF receipt: ${error}`);
+    }
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -39,45 +179,92 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>X</Text>
           </TouchableOpacity>
-
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             <Text style={styles.title}>تفاصيل الإيصال</Text>
 
             <Text style={styles.text}>رقم العميل: {receipt?.client}</Text>
             <Text style={styles.text}>
-              الرصيد الأولي: {receipt?.initialBalance} ج.م
+              تاريخ الإيصال : {receipt?.createdAt}
             </Text>
-            <Text style={styles.text}>
-              المبلغ المدفوع: {receipt?.moneyPaid} ج.م
-            </Text>
-            <Text style={styles.text}>الإجمالي: {receipt?.totalPrice} ج.م</Text>
 
             <Text style={styles.subtitle}>المنتجات:</Text>
-            {receipt && (
-              <>
-                {Object.entries(receipt?.products).map(
-                  ([productName, productDetails]) => (
-                    <View key={productName} style={styles.productContainer}>
-                      <Text style={styles.productName}>{productName}</Text>
-                      <Text style={styles.productDetail}>
-                        سعر البيع: {productDetails.sellPrice} ج.م
-                      </Text>
-                      <Text style={styles.productDetail}>
-                        الوزن الإجمالي: {productDetails.totalWeight} كجم
-                      </Text>
-                      <Text style={styles.productDetail}>التفاصيل:</Text>
-                      {Object.entries(productDetails.items).map(
-                        ([itemId, weight]) => (
-                          <Text key={itemId} style={styles.itemDetail}>
-                            - العنصر {itemId}: {weight} كجم
-                          </Text>
-                        ),
-                      )}
-                    </View>
-                  ),
-                )}
-              </>
+
+            {receipt?.products &&
+            Object.entries(receipt.products).length > 0 ? (
+              Object.entries(receipt.products).map(
+                ([productName, product], index) => (
+                  <View key={index} style={styles.productCard}>
+                    <TouchableOpacity
+                      onPress={() => toggleProductExpansion(productName)}>
+                      <View style={styles.productHeader}>
+                        <Text style={styles.productDetail}>
+                          الوزن: {product.totalWeight ?? 'غير محدد'} كجم
+                        </Text>
+                        <Text style={styles.productName}>{productName}</Text>
+                      </View>
+                      <View style={styles.productDetails}>
+                        <Text style={styles.productTotal}>
+                          {calculateTotal(product)} ج.م
+                        </Text>
+                        <Text style={styles.productDetail}>
+                          السعر: {product.sellPrice} ج.م/كجم
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {expandedProducts[productName] && product.items && (
+                      <View style={styles.itemsContainer}>
+                        {Object.entries(product.items).map(
+                          ([itemId, weight], itemIndex) => (
+                            <Text key={itemIndex} style={styles.itemText}>
+                              القطعة {itemIndex + 1} : {weight} كجم
+                            </Text>
+                          ),
+                        )}
+                      </View>
+                    )}
+                  </View>
+                ),
+              )
+            ) : (
+              <Text style={styles.noProductsText}>
+                لا توجد منتجات لهذا الإيصال
+              </Text>
             )}
+
+            <View style={styles.summary}>
+              <Text style={styles.summaryText}>ملخص الحساب:</Text>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryValue}>
+                  {receipt?.initialBalance ?? 0} ج.م
+                </Text>
+                <Text style={styles.summaryLabel}>الرصيد الأولي:</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryValue}>
+                  {receipt?.totalPrice ?? 0} ج.م
+                </Text>
+                <Text style={styles.summaryLabel}>إجمالي تكلفة المنتجات:</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryValue}>
+                  {receipt?.moneyPaid ?? 0} ج.م
+                </Text>
+                <Text style={styles.summaryLabel}>المبلغ المدفوع:</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryValue, styles.netBalance]}>
+                  {calculateNetBalance()} ج.م
+                </Text>
+                <Text style={styles.summaryLabel}>الصافي:</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.printButton}
+              onPress={handleGeneratePDF}>
+              <Text style={styles.buttonText}>طباعة الإيصال</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </View>
@@ -86,6 +273,12 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
 };
 
 const styles = StyleSheet.create({
+  noProductsText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
+  },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
@@ -94,11 +287,11 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '90%',
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
-    alignItems: 'center',
+    alignItems: 'stretch',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -108,67 +301,124 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  scrollViewContent: {
-    flexGrow: 1,
-    alignItems: 'flex-start',
-    paddingBottom: 20,
-  },
   closeButton: {
-    position: 'absolute',
-    right: 10,
-    top: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignSelf: 'flex-end',
+    padding: 10,
   },
   closeButtonText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#333',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 15,
-    alignSelf: 'center',
-  },
-  date: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 10,
-    alignSelf: 'center',
+    textAlign: 'center',
+    color: '#333',
   },
   text: {
     fontSize: 16,
     marginBottom: 5,
+    color: '#333',
   },
   subtitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 15,
     marginBottom: 10,
+    color: '#333',
   },
-  productContainer: {
-    marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    paddingBottom: 10,
+  productCard: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  productHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
   },
   productName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    color: '#333',
+  },
+  productTotal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  productDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   productDetail: {
     fontSize: 14,
-    marginBottom: 3,
-  },
-  itemDetail: {
-    fontSize: 12,
-    marginLeft: 10,
     color: '#666',
+  },
+  summary: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 20,
+  },
+  summaryText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  netBalance: {
+    color: '#4CAF50',
+  },
+  printButton: {
+    backgroundColor: '#2196F3',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  itemsContainer: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  itemText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+    textAlign: 'right',
   },
 });
 

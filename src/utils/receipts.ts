@@ -1,4 +1,4 @@
-import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
+import { FirebaseDatabaseTypes, serverTimestamp } from "@react-native-firebase/database";
 import { FIREBASE_CREATING_ERROR, FIREBASE_ERROR, REQUEST_LIMIT } from "../config/Constants";
 import { FirebaseError } from "../errors/FirebaseError";
 import { attemptFirebaseGet, attemptFirebasePush, attemptFirebaseUpdate } from "./firebase";
@@ -67,7 +67,8 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
         initialBalance: client.balance,
         moneyPaid: moneyPaid,
         products: products,
-        totalPrice: totalPrice
+        totalPrice: totalPrice,
+        createdAt: new Date()
     }, REQUEST_LIMIT);
     if(receiptUuid === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
@@ -87,18 +88,18 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
     if(receiptRes === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }
-    if(receiptRes === false) {
+    if(receiptRes === false) {  
         throw new FirebaseError(FIREBASE_CREATING_ERROR);
     }
 
-    const reference = storage().ref(`${receiptUuid}.pdf`);
-    const task = reference.putFile(pdfPath);
+    // const reference = storage().ref(`${receiptUuid}.pdf`);
+    // const task = reference.putFile(pdfPath);
 
-    task.on('state_changed', (snapshot) => {
-        uploadStateChange(snapshot.bytesTransferred, snapshot.totalBytes);
-    });
+    // task.on('state_changed', (snapshot) => {
+    //     uploadStateChange(snapshot.bytesTransferred, snapshot.totalBytes);
+    // });
     
-    await task;
+    // await task;
     
     return receiptUuid;
 }

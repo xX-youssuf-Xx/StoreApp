@@ -25,6 +25,7 @@ import {FirebaseError} from './src/errors/FirebaseError';
 import {useFirebase} from './src/context/FirebaseContext';
 import {useLoading} from './src/context/LoadingContext';
 import ClientDetailsScreen from './src/screens/ClientDetailsScreen';
+import ProductDetailsScreen from './src/screens/ProductDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -147,7 +148,8 @@ const App: React.FC = () => {
             <Stack.Screen name="AlreadyActive" component={AlreadyActiveScreen} />
             <Stack.Screen name="NoActiveUser" component={NoActiveScreen} />
             <Stack.Screen name="ClientDetails" component={ClientDetailsScreen} />
-          </Stack.Navigator>
+            <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+            </Stack.Navigator>
         </NavigationContainer>
       </GestureHandlerRootView>
       <FlashMessage position="top" />

@@ -48,22 +48,23 @@ const ClientDetailsScreen = () => {
   }, [client.id]);
 
   const getClientReceipts = async (clientUuid: string) => {
+    console.log("used client uuid : ", clientUuid);
     try {
       const fetchedReceipts = await getClientReceiptsHelper(db!, clientUuid);
       if (fetchedReceipts) {
-        const formattedReceipts = Object.entries(fetchedReceipts).map(
-          ([id, data]) => ({
+        console.log("fetchedReceipts:", fetchedReceipts);
+        const formattedReceipts = Object.entries(fetchedReceipts)
+          .filter(([_, data]) => data !== null) // Filter out null receipts
+          .map(([id, data]) => ({
             id,
             client: data.client,
-            initialBalance: data.initialBalance,
-            moneyPaid: data.moneyPaid,
-            totalPrice: data.totalPrice,
-            products: data.products,
-            // date: new Date(data.timestamp).toLocaleDateString(), // Assuming there's a timestamp field
-          }),
-        );
+            initialBalance: data.initialBalance || 0,
+            moneyPaid: data.moneyPaid || 0,
+            totalPrice: data.totalPrice || 0,
+            products: data.products || {},
+            createdAt: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : 'N/A',
+          }));
         setReceipts(formattedReceipts);
-        console.log('fetched : ', fetchedReceipts);
         console.log('formatted : ', formattedReceipts);
       }
     } catch (error) {
@@ -72,11 +73,11 @@ const ClientDetailsScreen = () => {
   };
 
   const getReceiptDetails = async (receiptUuid: string) => {
-    console.log('recived recipt uuid', receiptUuid);
+    console.log('received receipt uuid', receiptUuid);
     try {
       const receipt = await getReceipt(db!, receiptUuid);
       if (receipt) {
-        console.log('receipt details:', receipt);
+        console.log('receipt details:', receipt.products);
         setSelectedReceipt(receipt);
         setIsReceiptDetailsVisible(true);
       }
@@ -133,7 +134,7 @@ const ClientDetailsScreen = () => {
       style={styles.receiptItem}
       onPress={() => getReceiptDetails(item.id)}>
       <View style={styles.receiptInfo}>
-        {/* <Text style={styles.receiptDate}>{item.date}</Text> */}
+        <Text style={styles.receiptDate}>{item.createdAt}</Text>
         <Text style={styles.receiptAmount}>المبلغ: {item.moneyPaid} ج.م</Text>
       </View>
       <View>
@@ -172,11 +173,13 @@ const ClientDetailsScreen = () => {
         />
       </View>
 
-      <ReceiptDetails
-        isVisible={isReceiptDetailsVisible}
-        onClose={() => setIsReceiptDetailsVisible(false)}
-        receipt={selectedReceipt!}
-      />
+      {selectedReceipt && (
+        <ReceiptDetails
+          isVisible={isReceiptDetailsVisible}
+          onClose={() => setIsReceiptDetailsVisible(false)}
+          receipt={selectedReceipt}
+        />
+      )}
     </>
   );
 };

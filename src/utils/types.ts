@@ -16,11 +16,13 @@ export type qrDataType = {
 }
 
 export type Product = {
+    name ? : string,
     boxWeight: number, 
     isQrable: Boolean, 
     isStatic: Boolean,
     items: Item[],
-    qrData?: qrDataType
+    qrData?: qrDataType,
+    itemCount?:  number
 }
 
 export type ProuctsType = {
@@ -51,6 +53,7 @@ export type Receipt = {
     client: string,
     initialBalance: number,
     totalPrice: number,
+    createdAt: string,
     moneyPaid: number,
     products: {
         [product: string]: ReceiptProduct

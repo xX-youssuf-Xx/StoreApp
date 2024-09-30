@@ -33,23 +33,6 @@ const ClientsScreen = () => {
   const {db} = useFirebase();
   const [clients, setClients] = useState<Client[]>([]);
 
-  const duplicateClients = (
-    originalClients: Client[],
-    times: number,
-  ): Client[] => {
-    let duplicatedClients: Client[] = [];
-    for (let i = 0; i < times; i++) {
-      duplicatedClients = duplicatedClients.concat(
-        originalClients.map(client => ({
-          ...client,
-          id: `${client.id}-${i}`, // Ensure unique IDs
-          name: `${client.name} ${i + 1}`, // Add a number to differentiate
-        })),
-      );
-    }
-    return duplicatedClients;
-  };
-
   const getClients = async () => {
     try {
       const clients = await getAllClients(db!);
@@ -64,8 +47,7 @@ const ClientsScreen = () => {
           receiptsCount: Object.keys(data.receipts || {}).length,
         }));
 
-        const duplicatedClients = duplicateClients(formattedClients, 10);
-        // setClients(duplicatedClients);
+
         setClients(formattedClients);
       }
     } catch (error) {
@@ -293,11 +275,12 @@ const ClientsScreen = () => {
           "-O7dw9t7IuJ04vnhGyw4": 7
         }
       }
-    }); */
+    }, "", () => {}); */
     getClients();
     // getClientDetails('-O7hoaCp0zkpTN1XCsYR');
     // getClientReceipts('-O7hoaCp0zkpTN1XCsYR');
     getReceiptDetails('-O7j1d0q4Yp6Ut4ZYf3q');
+    getReceiptDetails("-O7xTrRux7Lee5pgxsUz");
   }, []);
 
   const handleSettingsPress = () => {
