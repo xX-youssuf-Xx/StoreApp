@@ -18,6 +18,8 @@ const FoodStorageScreen = () => {
     try {
       const products = await getAllProducts(db!);
       if(products) {
+        console.log("inventory");
+        console.log(products['كبدة']);
         // JOE: SET THE PRODUCTS
       }
     } catch (error) {
@@ -160,7 +162,8 @@ const FoodStorageScreen = () => {
   useEffect(() => {
     // getProductDetails('كبدة');
     // newProduct('كبدة');
-    importItem('كبدة', 50, 3, "]C101907101788118363201000380112406032156516901");
+    // importItem('كبدة', 300, 3, "]C101907101788118363201000380112406032156516901");
+    // getInventory();
   }, []);
   
   const handleSettingsPress = () => {

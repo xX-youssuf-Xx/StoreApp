@@ -191,9 +191,9 @@ const ClientsScreen = () => {
     }
   }
   
-  const createReceipt = async (clientUuid: string, moneyPaid: number, products: productsReceiptQuery, pdfPath: string, uploadStateChange: (bytesTransferred: number, totalBytes: number) => void) => {
+  const createReceipt = async (clientUuid: string, moneyPaid: number, pdfPath: string, uploadStateChange: (bytesTransferred: number, totalBytes: number) => void, products?: productsReceiptQuery) => {
     try {
-      const receiptUuid = await createReceiptHelper(db!, clientUuid, moneyPaid, products, pdfPath, uploadStateChange);
+      const receiptUuid = await createReceiptHelper(db!, clientUuid, moneyPaid, pdfPath, uploadStateChange, products);
       if(receiptUuid) {
         console.log("receiptUuid");
         console.log(receiptUuid); 
@@ -222,22 +222,8 @@ const ClientsScreen = () => {
 
 
   useEffect(() => {
-    /* createReceipt("-O7hoaCp0zkpTN1XCsYR", 2000, {
-      "كبدة": {
-        sellPrice: 100,
-        items: {
-          "-O7dw9t7IuJ04vnhGyw4": 3,
-          "-O7dwbhYRFY0vBG3JSZA": 4
-        }
-      },
-      "لحم ايطالي": {
-        sellPrice: 200,
-        items: {
-          "-O7dw9t7IuJ04vnhGyw4": 7
-        }
-      }
-    }, "", () => {}); */
-    getReceiptDetails("-O7xTrRux7Lee5pgxsUz");
+    // createReceipt("-O7hoaCp0zkpTN1XCsYR", 2000, "", () => {}, {});
+    // getReceiptDetails("-O7xTrRux7Lee5pgxsUz");
   }, []);
 
   const handleSettingsPress = () => {
