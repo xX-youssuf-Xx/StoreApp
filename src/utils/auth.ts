@@ -56,3 +56,13 @@ export const updateAdminBalance = async (database: FirebaseDatabaseTypes.Module,
     }
     return res;
 }
+
+
+export const getAdminBalance = async (database: FirebaseDatabaseTypes.Module): Promise<number> => {
+    const balance = await attemptFirebaseGet(database, '/balance', REQUEST_LIMIT);
+    if (balance === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+
+    return balance.val();
+}
