@@ -20,7 +20,7 @@ const HomeScreen = () => {
 
   const handleSettingsPress = async () => {
     // Handle settings press
-    await clearStorage();
+    // await clearStorage();
     console.log('Settings pressed');
   };
 
@@ -44,7 +44,7 @@ const HomeScreen = () => {
         showBackButton={false}
         showSearchIcon={false}
       />
-      <View style={styles.splashContainer}>
+      {/* <View style={styles.splashContainer}>
         <Text>Home Screen</Text>
 
         <View style={{marginVertical: 10}}>
@@ -70,7 +70,7 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate('المخزن')}
           />
         </View>
-      </View>
+      </View> */}
     </>
   );
 };

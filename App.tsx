@@ -152,8 +152,8 @@ const App: React.FC = () => {
             </Stack.Navigator>
         </NavigationContainer>
       </GestureHandlerRootView>
-      <FlashMessage position="top" />
-    </>
+      <FlashMessage position="top" floating={true} style={{ elevation: 1000 }} />
+      </>
   );
 };
   
@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
     width: '117%',
     height: '117%',
   },
+  
 });
 
 export default App;

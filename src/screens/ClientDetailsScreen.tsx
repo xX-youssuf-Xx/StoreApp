@@ -19,6 +19,8 @@ import {
 } from '../utils/clitent';
 import {productsReceiptQuery, ReceiptProduct, Receipt} from '../utils/types';
 import ReceiptDetails from '../components/ReciptDetails';
+import AddButton from '../components/AddButton';
+import CreateReceipt from '../components/CreateReceipt';
 
 interface Client {
   id: string;
@@ -34,6 +36,7 @@ type ClientDetailsRouteProp = RouteProp<
 >;
 
 const ClientDetailsScreen = () => {
+  const [modalVisible, setModalVisible] = useState(false);
   const [isReceiptDetailsVisible, setIsReceiptDetailsVisible] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
 
@@ -186,6 +189,17 @@ const ClientDetailsScreen = () => {
           receipt={selectedReceipt}
         />
       )}
+
+<AddButton refresh={() => getClientReceipts(client.id)}>
+  {({closeModal, refresh}) => (
+    <CreateReceipt
+      clientId={client.id}
+      onClose={closeModal}
+      refresh={refresh}
+    />
+  )}
+</AddButton>
+
     </>
   );
 };
@@ -219,6 +233,8 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 10,
+    paddingBottom:80
+
   },
   receiptItem: {
     backgroundColor: 'white',

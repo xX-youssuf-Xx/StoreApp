@@ -1,21 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import TopNav from '../../src/components/TopNav';
-import { useFirebase } from '../context/FirebaseContext';
-import { FirebaseError } from '../errors/FirebaseError';
-import { FIREBASE_ERROR } from '../config/Constants';
-import { showMessage } from 'react-native-flash-message';
-import { getProduct } from '../utils/inventory';
-import { Product, Item } from '../utils/types';
+import {useFirebase} from '../context/FirebaseContext';
+import {FirebaseError} from '../errors/FirebaseError';
+import {FIREBASE_ERROR} from '../config/Constants';
+import {showMessage} from 'react-native-flash-message';
+import {getProduct} from '../utils/inventory';
+import {Product, Item} from '../utils/types';
+import AddButton from '../components/AddButton';
+import CreateItem from '../components/CreateItem';
 
 type RootStackParamList = {
-  ProductDetails: { product: { name: string } };
+  ProductDetails: {product: {name: string}};
 };
 
-type ProductDetailsScreenRouteProp = RouteProp<RootStackParamList, 'ProductDetails'>;
+type ProductDetailsScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'ProductDetails'
+>;
 
-// Update Item type to include qrString
 interface ExtendedItem extends Item {
   qrString?: string;
 }
@@ -23,10 +27,12 @@ interface ExtendedItem extends Item {
 const ProductDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<ProductDetailsScreenRouteProp>();
-  const { product } = route.params;
-  const { db } = useFirebase();
+  const {product} = route.params;
+  const {db} = useFirebase();
   const [productDetails, setProductDetails] = useState<Product | null>(null);
-  const [productItems, setProductItems] = useState<(ExtendedItem & { id: string })[]>([]);
+  const [productItems, setProductItems] = useState<
+    (ExtendedItem & {id: string; isExpanded: boolean})[]
+  >([]);
 
   useEffect(() => {
     if (db) {
@@ -42,10 +48,14 @@ const ProductDetailsScreen = () => {
       const fetchedProduct = await getProduct(db, productName);
       if (fetchedProduct) {
         setProductDetails(fetchedProduct);
-        const formattedItems = Object.entries(fetchedProduct.items).map(([id, item]) => ({
-          id,
-          ...(item as ExtendedItem),
-        }));
+        const formattedItems = Object.entries(fetchedProduct.items).map(
+          ([id, item]) => ({
+            id,
+            ...(item as ExtendedItem),
+            isExpanded: false,
+          }),
+        );
+        console.log('items:::' , formattedItems)
         setProductItems(formattedItems);
       }
     } catch (error) {
@@ -72,15 +82,38 @@ const ProductDetailsScreen = () => {
     }
   };
 
-  const renderItemDetails = ({ item }: { item: ExtendedItem & { id: string } }) => (
-    <TouchableOpacity style={styles.itemCard}>
+  const toggleItemExpansion = (id: string) => {
+    setProductItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? {...item, isExpanded: !item.isExpanded} : item,
+      ),
+    );
+  };
+
+  const renderItemDetails = ({
+    item,
+  }: {
+    item: ExtendedItem & {id: string; isExpanded: boolean};
+  }) => (
+    <TouchableOpacity
+      style={styles.itemCard}
+      onPress={() => toggleItemExpansion(item.id)}>
       <View style={styles.itemInfo}>
+        <Text style={styles.itemPrice}>سعر الشراء: {item.boughtPrice} ج.م</Text>
         <Text style={styles.itemWeight}>الوزن: {item.weight} كجم</Text>
-        <Text style={styles.itemTotalWeight}>الوزن الكلي: {item.totalWeight} كجم</Text>
       </View>
       <View>
-        <Text style={styles.itemPrice}>سعر الشراء: {item.boughtPrice} ج.م</Text>
-        {item.qrString && <Text style={styles.itemQR}>QR: {item.qrString}</Text>}
+        <Text style={styles.itemTotalWeight}>
+          الوزن الكلي: {item.totalWeight} كجم
+        </Text>
+        {item.qrString && (
+          <Text style={styles.itemQR}>
+            الكود:{' '}
+            {item.isExpanded
+              ? item.qrString
+              : `${item.qrString.substring(0, 10)}...`}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -98,19 +131,23 @@ const ProductDetailsScreen = () => {
       <View style={styles.container}>
         {productDetails && (
           <View style={styles.productSummary}>
-            <Text style={styles.productName}>{product.name}</Text>
-            <Text style={styles.productAttribute}>
-              نوع: {productDetails.isStatic ? 'ثابت' : 'متغير'}
-            </Text>
-            <Text style={styles.productAttribute}>
-              QR: {productDetails.isQrable ? 'نعم' : 'لا'}
-            </Text>
-            <Text style={styles.productAttribute}>
-              وزن الصندوق: {productDetails.boxWeight} كجم
-            </Text>
-            <Text style={styles.productItemCount}>
-              عدد العناصر: {productItems.length}
-            </Text>
+            <View style={styles.summaryRow}>
+              <Text style={styles.productAttribute}>
+                وزن الصندوق: {productDetails.boxWeight} كجم
+              </Text>
+              <Text style={styles.productAttribute}>
+                نوع: {productDetails.isStatic ? 'ثابت' : 'متغير'}
+              </Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.productItemCount}>
+                عدد العناصر: {productItems.length}
+              </Text>
+              <Text style={styles.productAttribute}>
+                QR: {productDetails.isQrable ? 'نعم' : 'لا'}
+              </Text>
+            </View>
           </View>
         )}
         <FlatList
@@ -120,6 +157,16 @@ const ProductDetailsScreen = () => {
           contentContainerStyle={styles.listContainer}
         />
       </View>
+
+      <AddButton refresh={() => getProductDetails(product.name)}>
+        {({closeModal, refresh}) => (
+          <CreateItem
+            closeModal={closeModal}
+            reloadProducts={refresh}
+            productName={product.name}
+          />
+        )}
+      </AddButton>
     </>
   );
 };
@@ -131,63 +178,80 @@ const styles = StyleSheet.create({
   },
   productSummary: {
     backgroundColor: 'white',
-    padding: 20,
+    padding: 15,
     marginBottom: 10,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 5,
   },
   productName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
   },
   productAttribute: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
-    marginTop: 5,
   },
   productItemCount: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#4CAF50',
-    marginTop: 10,
+    textAlign: 'center',
+    marginTop: 5,
   },
   listContainer: {
     padding: 10,
+    paddingBottom: 80,
   },
   itemCard: {
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
   },
   itemInfo: {
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
   },
   itemWeight: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
   },
   itemTotalWeight: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#2196F3',
   },
   itemPrice: {
     fontSize: 14,
     color: '#4CAF50',
+    textAlign: 'left',
   },
   itemQR: {
     fontSize: 12,
     color: '#666',
     marginTop: 5,
+    textAlign: 'left',
+  },
+  expandedQR: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  fullQRText: {
+    fontSize: 12,
+    color: '#333',
   },
 });
 

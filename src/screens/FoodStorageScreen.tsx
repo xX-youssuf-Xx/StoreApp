@@ -1,3 +1,13 @@
+// First, let's define the Product interface properly
+interface Product {
+  name: string;  // Make name required
+  itemCount: number;
+  items?: Record<string, any>;
+  isStatic: boolean;
+  isQrable: boolean;
+  boxWeight: number;
+}
+
 import {
   View,
   Text,
@@ -27,49 +37,60 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-
-import {Product} from '../utils/types';
+import AddButton from '../components/AddButton';
+import CreateProduct from '../components/CreateProduct';
 
 const FoodStorageScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const [searchText, setSearchText] = useState('');
   const {db} = useFirebase();
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const getInventory = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const products = await getAllProducts(db!);
       if (products) {
         const formattedProducts = Object.entries(products).map(
-          ([name, data]) => ({
+          ([name, data]): Product => ({
             name,
             itemCount: Object.keys(data.items || {}).length,
             items: data.items,
-            isStatic: data.isStatic,
-            isQrable: data.isQrable,
-            boxWeight: data.boxWeight,
+            isStatic: Boolean(data.isStatic),
+            isQrable: Boolean(data.isQrable),
+            boxWeight: Number(data.boxWeight) || 0,
           }),
         );
         setProducts(formattedProducts);
+        setFilteredProducts(formattedProducts);
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
         if (error.code === FIREBASE_ERROR) {
-          console.log('ERROR');
+          const errorMessage = 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا';
+          setError(errorMessage);
           showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
+            message: 'Error',
+            description: errorMessage,
+            type: 'danger',
             duration: 3000,
             floating: true,
             autoHide: true,
           });
         } else {
           console.error('An error occurred with code:', error.code);
+          setError('An unexpected error occurred');
         }
       } else {
         console.error('An unexpected error occurred:', error);
+        setError('An unexpected error occurred');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,16 +98,16 @@ const FoodStorageScreen = () => {
     try {
       const product = await getProduct(db!, productName);
       if (product) {
-        console.log(product);
-        // JOE: SET THE PRODUCT DETAILS (AND ITS ITEMS)
+        console.log('Product details:', product);
+        return product;
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
         if (error.code === FIREBASE_ERROR) {
           showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
+            message: 'Error',
+            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا',
+            type: 'danger',
             duration: 3000,
             floating: true,
             autoHide: true,
@@ -98,12 +119,13 @@ const FoodStorageScreen = () => {
         console.error('An unexpected error occurred:', error);
       }
     }
+    return null;
   };
 
   const newProduct = async (
     productName: string,
-    isStatic: Boolean = false,
-    isQrable: Boolean = false,
+    isStatic: boolean = false,
+    isQrable: boolean = false,
     boxWeight: number = 0,
   ) => {
     try {
@@ -115,22 +137,30 @@ const FoodStorageScreen = () => {
         boxWeight,
       );
       if (key) {
-        console.log(key);
-        // JOE: SET THE PRODUCT DETAILS (AND ITS ITEMS)
+        console.log('Product created with key:', key);
+        await getInventory();
+        return key;
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
         if (error.code === FIREBASE_ERROR) {
           showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
+            message: 'Error',
+            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا',
+            type: 'danger',
             duration: 3000,
             floating: true,
             autoHide: true,
           });
         } else if (error.code === FIREBASE_CREATING_ERROR) {
-          // JOE: ERROR CREATING THE INSTANCE
+          showMessage({
+            message: 'Error',
+            description: 'Error creating product',
+            type: 'danger',
+            duration: 3000,
+            floating: true,
+            autoHide: true,
+          });
         } else {
           console.error('An error occurred with code:', error.code);
         }
@@ -138,6 +168,7 @@ const FoodStorageScreen = () => {
         console.error('An unexpected error occurred:', error);
       }
     }
+    return null;
   };
 
   const importItem = async (
@@ -155,28 +186,41 @@ const FoodStorageScreen = () => {
         qrString,
       );
       if (key) {
-        console.log(key);
-        // JOE: SET THE PRODUCT DETAILS (AND ITS ITEMS)
+        console.log('Item created with key:', key);
+        await getInventory();
+        return key;
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else if (error.code === FIREBASE_CREATING_ERROR) {
-          // JOE: ERROR CREATING THE INSTANCE
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
+        handleFirebaseError(error);
       } else {
         console.error('An unexpected error occurred:', error);
       }
+    }
+    return null;
+  };
+
+  const handleFirebaseError = (error: FirebaseError) => {
+    if (error.code === FIREBASE_ERROR) {
+      showMessage({
+        message: 'Error',
+        description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا',
+        type: 'danger',
+        duration: 3000,
+        floating: true,
+        autoHide: true,
+      });
+    } else if (error.code === FIREBASE_CREATING_ERROR) {
+      showMessage({
+        message: 'Error',
+        description: 'Error creating item',
+        type: 'danger',
+        duration: 3000,
+        floating: true,
+        autoHide: true,
+      });
+    } else {
+      console.error('An error occurred with code:', error.code);
     }
   };
 
@@ -184,8 +228,15 @@ const FoodStorageScreen = () => {
     try {
       const qrData = await getProductQrData(db!, productName);
       if (!qrData) {
-        // JOE: THIS PRODUCT IS NOT QRABLE
-        return;
+        showMessage({
+          message: 'Warning',
+          description: 'This product is not QR-enabled',
+          type: 'warning',
+          duration: 3000,
+          floating: true,
+          autoHide: true,
+        });
+        return null;
       }
       const intVal = qrVal.slice(
         qrData.from - 1,
@@ -199,58 +250,39 @@ const FoodStorageScreen = () => {
       return `${intVal}.${floatVal}`;
     } catch (error) {
       if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
+        handleFirebaseError(error);
       } else {
         console.error('An unexpected error occurred:', error);
       }
+      return null;
     }
   };
 
   useEffect(() => {
     getInventory();
-    getProductDetails('كبدة');
-    // newProduct('كبدة');
-    // importItem('كبدة', 50, 3, "]C101907101788118363201000380112406032156516901");
   }, []);
-
-  const handleSettingsPress = () => {
-    // Handle settings press
-    console.log('Settings pressed');
-  };
 
   const handleSearchChange = (text: string) => {
     setSearchText(text);
-    // Perform search operation with the text
-    console.log('Searching for:', text);
+    const filtered = products.filter(product =>
+      product.name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+  };
+
+  const handleSettingsPress = () => {
+    console.log('Settings pressed');
   };
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const [isQrReaderVisible, setIsQrReaderVisible] = useState(false);
-  const [scannedCodes, setScannedCodes] = useState<string[]>([]);
-
-  const handleScan = (data: string[]) => {
-    setScannedCodes(data);
-  };
-
   const renderProductItem = ({item}: {item: Product}) => (
     <TouchableOpacity
       style={styles.productItem}
       onPress={() => {
-        navigation.navigate('ProductDetails', { product: item })
+        navigation.navigate('ProductDetails', {product: item});
       }}>
       <View style={styles.productInfo}>
         <Text style={styles.productItemCount}>العناصر: {item.itemCount}</Text>
@@ -267,6 +299,25 @@ const FoodStorageScreen = () => {
     </TouchableOpacity>
   );
 
+  const renderEmptyList = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>
+        {searchText
+          ? 'No products found matching your search'
+          : 'No products available'}
+      </Text>
+    </View>
+  );
+
+  const renderError = () => (
+    <View style={styles.errorContainer}>
+      <Text style={styles.errorText}>{error}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={getInventory}>
+        <Text style={styles.retryButtonText}>Retry</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <>
       <TopNav
@@ -278,13 +329,26 @@ const FoodStorageScreen = () => {
         showSearchIcon={true}
       />
       <View style={styles.container}>
-        <FlatList
-          data={products}
-          renderItem={renderProductItem}
-          keyExtractor={(item, index) => item.name ?? index.toString()}
-          contentContainerStyle={styles.listContainer}
-        />
+        {error ? (
+          renderError()
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            renderItem={renderProductItem}
+            keyExtractor={(item) => item.name}
+            contentContainerStyle={styles.listContainer}
+            ListEmptyComponent={renderEmptyList}
+            refreshing={isLoading}
+            onRefresh={getInventory}
+          />
+        )}
       </View>
+
+      <AddButton refresh={getInventory}>
+        {({closeModal, refresh}) => (
+          <CreateProduct closeModal={closeModal} reloadProducts={refresh} />
+        )}
+      </AddButton>
     </>
   );
 };
@@ -296,6 +360,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 10,
+    paddingBottom: 80,
   },
   productItem: {
     backgroundColor: 'white',
@@ -315,16 +380,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    textAlign: 'right',
+    textAlign: 'left',
   },
   productAttributes: {
     fontSize: 14,
     color: '#666',
     marginTop: 5,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   productInfo: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   productItemCount: {
     fontSize: 14,
@@ -334,6 +399,38 @@ const styles = StyleSheet.create({
   productBoxWeight: {
     fontSize: 14,
     color: '#2196F3',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#f44336',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
 
