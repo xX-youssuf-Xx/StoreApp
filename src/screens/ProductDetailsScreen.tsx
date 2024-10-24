@@ -99,8 +99,8 @@ const ProductDetailsScreen = () => {
       style={styles.itemCard}
       onPress={() => toggleItemExpansion(item.id)}>
       <View style={styles.itemInfo}>
-        <Text style={styles.itemPrice}>سعر الشراء: {item.boughtPrice} ج.م</Text>
         <Text style={styles.itemWeight}>الوزن: {item.weight} كجم</Text>
+        <Text style={styles.itemPrice}>سعر الشراء: {item.boughtPrice} ج.م</Text>
       </View>
       <View>
         <Text style={styles.itemTotalWeight}>

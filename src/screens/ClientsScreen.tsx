@@ -20,6 +20,7 @@ import {
 import {productsReceiptQuery} from '../utils/types';
 import AddButton from '../components/AddButton';
 import CreateClient from '../components/CreateClient';
+import LogoutMenu from '../components/LogoutComponent';
 
 interface Client {
   id: string;
@@ -35,6 +36,7 @@ const ClientsScreen = () => {
   const {db} = useFirebase();
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const getClients = async () => {
     try {
@@ -238,10 +240,17 @@ const ClientsScreen = () => {
 
   return (
     <>
+         {isMenuOpen && (
+        <LogoutMenu
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+        />
+      )}
+
       <TopNav
         title="العملاء"
-        onSettingsPress={handleSettingsPress}
-        onSearchChange={handleSearchChange}
+ onSettingsPress={() => {    setIsMenuOpen(!isMenuOpen);
+        }}        onSearchChange={handleSearchChange}
         onBackPress={handleBackPress}
         showBackButton={false}
         showSearchIcon={true}
@@ -277,7 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     elevation: 2,

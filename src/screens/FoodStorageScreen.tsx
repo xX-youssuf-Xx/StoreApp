@@ -39,6 +39,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import AddButton from '../components/AddButton';
 import CreateProduct from '../components/CreateProduct';
+import LogoutMenu from '../components/LogoutComponent';
 
 const FoodStorageScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -48,6 +49,7 @@ const FoodStorageScreen = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const getInventory = async () => {
     setIsLoading(true);
@@ -320,10 +322,17 @@ const FoodStorageScreen = () => {
 
   return (
     <>
+         {isMenuOpen && (
+        <LogoutMenu
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+        />
+      )}
+
       <TopNav
         title="المخزن"
-        onSettingsPress={handleSettingsPress}
-        onSearchChange={handleSearchChange}
+ onSettingsPress={() => {    setIsMenuOpen(!isMenuOpen);
+        }}        onSearchChange={handleSearchChange}
         onBackPress={handleBackPress}
         showBackButton={false}
         showSearchIcon={true}
@@ -367,7 +376,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     elevation: 2,

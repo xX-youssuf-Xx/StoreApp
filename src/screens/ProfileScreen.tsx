@@ -2,135 +2,130 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
-import { getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit, getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome } from '../utils/stats';
+import { 
+  getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit,
+  getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome 
+} from '../utils/stats';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
 import { showMessage } from 'react-native-flash-message';
-import { getAdminBalance, updateAdminBalance } from '../utils/auth';
+import { updateAdminBalance, getAdminBalance } from '../utils/auth';
 import TopNav from '../../src/components/TopNav';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import LogoutMenu from '../components/LogoutComponent';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const { db } = useFirebase();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Balance state
+  const [balance, setBalance] = useState(0);
+  
+  // Profit states
   const [todayProfit, setTodayProfit] = useState(0);
   const [weekProfit, setWeekProfit] = useState(0);
   const [monthProfit, setMonthProfit] = useState(0);
   const [lastMonthProfit, setLastMonthProfit] = useState(0);
   const [allProfit, setAllProfit] = useState(0);
+
+  // Income states
+  const [todayIncome, setTodayIncome] = useState(0);
+  const [weekIncome, setWeekIncome] = useState(0);
+  const [monthIncome, setMonthIncome] = useState(0);
+  const [lastMonthIncome, setLastMonthIncome] = useState(0);
+  const [allIncome, setAllIncome] = useState(0);
+
+  // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [balanceChange, setBalanceChange] = useState('');
 
-  const getStats = async () => {
+  const getBalance = async () => {
     try {
-      const todayProfit = await getTodayProfit(db!);
-      if(todayProfit !== null && todayProfit !== undefined) {
-        console.log("todayProfit");
-        console.log(todayProfit);
-        setTodayProfit(Number(todayProfit));
-      }
-      
-      const weekProfit = await getWeekProfit(db!);
-      if(weekProfit !== null && weekProfit !== undefined) {
-        console.log("weekProfit");
-        console.log(weekProfit);
-        setWeekProfit(Number(weekProfit));
-      }
-
-      const monthProfit = await getMonthProfit(db!);
-      if(monthProfit !== null && monthProfit !== undefined) {
-        console.log("monthProfit");
-        console.log(monthProfit);
-        setMonthProfit(Number(monthProfit));
-      }
-      
-      const lastMonthProfit = await getLastMonthProfit(db!);
-      if(lastMonthProfit !== null && lastMonthProfit !== undefined) {
-        console.log("lastMonthProfit");
-        console.log(lastMonthProfit);
-        setLastMonthProfit(Number(lastMonthProfit));
-      }
-      
-      const allProfit = await getAllProfit(db!);
-      if(allProfit !== null && allProfit !== undefined) {
-        console.log("allProfit");
-        console.log(allProfit);
-        setAllProfit(Number(allProfit));
-      }
-
-      const todayIncome = await getTodayIncome(db!);
-      if(todayIncome) {
-        console.log("todayIncome");
-        console.log(todayIncome);
-        // JOE: SET THE STATs
-      }
-      
-      const weekIncome = await getWeekIncome(db!);
-      if(weekIncome) {
-        console.log("weekIncome");
-        console.log(weekIncome);
-        // JOE: SET THE STATs
-      }
-      const monthIncome = await getMonthIncome(db!);
-      if(monthIncome) {
-        console.log("monthIncome");
-        console.log(monthIncome);
-        // JOE: SET THE STATs
-      }
-      
-      const lastMonthIncome = await getLastMonthIncome(db!);
-      if(lastMonthIncome) {
-        console.log("lastMonthIncome");
-        console.log(lastMonthIncome);
-        // JOE: SET THE STATs
-      }
-      
-      const allIncome = await getAllIncome(db!);
-      if(allIncome) {
-        console.log("allIncome");
-        console.log(allIncome);
-        // JOE: SET THE STATs
+      const currentBalance = await getAdminBalance(db!);
+      if (currentBalance !== null && currentBalance !== undefined) {
+        setBalance(Number(currentBalance));
       }
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
-  const getBalance = async () => {
+  const getStats = async () => {
     try {
-      const balance = await getAdminBalance(db!);
-      if(balance) {
-        console.log("balance");
-        console.log(balance);
-        // JOE: SET THE Balance
+      // Fetch profit statistics
+      const today = await getTodayProfit(db!);
+      if (today !== null && today !== undefined) {
+        setTodayProfit(Number(today));
+      }
+      
+      const week = await getWeekProfit(db!);
+      if (week !== null && week !== undefined) {
+        setWeekProfit(Number(week));
+      }
+
+      const month = await getMonthProfit(db!);
+      if (month !== null && month !== undefined) {
+        setMonthProfit(Number(month));
+      }
+      
+      const lastMonth = await getLastMonthProfit(db!);
+      if (lastMonth !== null && lastMonth !== undefined) {
+        setLastMonthProfit(Number(lastMonth));
+      }
+      
+      const all = await getAllProfit(db!);
+      if (all !== null && all !== undefined) {
+        setAllProfit(Number(all));
+      }
+
+      // Fetch income statistics
+      const todayInc = await getTodayIncome(db!);
+      if (todayInc !== null && todayInc !== undefined) {
+        setTodayIncome(Number(todayInc));
+      }
+
+      const weekInc = await getWeekIncome(db!);
+      if (weekInc !== null && weekInc !== undefined) {
+        setWeekIncome(Number(weekInc));
+      }
+
+      const monthInc = await getMonthIncome(db!);
+      if (monthInc !== null && monthInc !== undefined) {
+        setMonthIncome(Number(monthInc));
+      }
+
+      const lastMonthInc = await getLastMonthIncome(db!);
+      if (lastMonthInc !== null && lastMonthInc !== undefined) {
+        setLastMonthIncome(Number(lastMonthInc));
+      }
+
+      const allInc = await getAllIncome(db!);
+      if (allInc !== null && allInc !== undefined) {
+        setAllIncome(Number(allInc));
       }
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else if (error.code === FIREBASE_CREATING_ERROR) {
-          // JOE: ERROR CREATING THE INSTANCE
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
+      handleError(error);
     }
-  }
+  };
 
-  const changeBalance = async (amount: number) => {
+  const changeBalance = async () => {
+    const amount = parseFloat(balanceChange);
+    if (isNaN(amount)) {
+      showMessage({
+        message: 'خطأ',
+        description: 'الرجاء إدخال رقم صحيح',
+        type: 'danger',
+        duration: 3000,
+        floating: true,
+        autoHide: true,
+      });
+      return;
+    }
+    
     try {
       const key = await updateAdminBalance(db!, amount);
       if(key) {
-        console.log(key);
         showMessage({
           message: 'نجاح',
           description: 'تم تحديث الرصيد بنجاح',
@@ -141,12 +136,12 @@ const ProfileScreen = () => {
         });
         setModalVisible(false);
         setBalanceChange('');
-        getStats();
+        getBalance();
       }
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   const handleError = (error: any) => {
     if (error instanceof FirebaseError) {
@@ -169,52 +164,80 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleSettingsPress = () => {
-    console.log('Settings pressed');
-  };
-
-  const handleSearchChange = (text: string) => {
-    console.log('Searching for:', text);
-  };
-
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
-
   useEffect(() => {
-    getStats();
     getBalance();
-    // changeBalance(-200);
+    getStats();
   }, []);
 
   const StatCard = ({ title, value }: { title: string; value: number }) => (
     <View style={styles.statCard}>
-      <Text style={styles.statValue}>{value.toFixed(2)} ج.م</Text>
       <Text style={styles.statTitle}>{title}</Text>
+      <Text style={styles.statValue}>{value.toFixed(2)} ج.م</Text>
     </View>
   );
 
   return (
     <>
+     {isMenuOpen && (
+        <LogoutMenu
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+        />
+      )}
+
       <TopNav
         title="الحساب الشخصي"
-        onSettingsPress={handleSettingsPress}
-        onSearchChange={handleSearchChange}
-        onBackPress={handleBackPress}
+        onSettingsPress={() => {    setIsMenuOpen(!isMenuOpen);
+        }}
+        onSearchChange={() => {}}
+        onBackPress={() => navigation.goBack()}
         showBackButton={false}
         showSearchIcon={false}
       />
       <ScrollView style={styles.container}>
-        <View style={styles.statsContainer}>
-          <StatCard title="ربح اليوم" value={todayProfit} />
-          <StatCard title="ربح الأسبوع" value={weekProfit} />
-          <StatCard title="ربح الشهر" value={monthProfit} />
-          <StatCard title="ربح الشهر الماضي" value={lastMonthProfit} />
-          <StatCard title="إجمالي الربح" value={allProfit} />
+        {/* Balance Section */}
+        <TouchableOpacity style={styles.balanceCard} onPress={() => setModalVisible(true)}>
+          <View style={styles.balanceContent}>
+            <Text style={styles.balanceTitle}>الرصيد الحالي</Text>
+            <Text style={styles.balanceValue}>{balance.toFixed(2)} ج.م</Text>
+          </View>
+          <MaterialIcons name="edit" size={24} color="#4CAF50" />
+        </TouchableOpacity>
+
+        {/* Today's Stats */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
+          <StatCard title="الربح" value={todayProfit} />
+          <StatCard title="الدخل" value={todayIncome} />
         </View>
-        {/* <TouchableOpacity style={styles.updateButton} onPress={() => setModalVisible(true)}>
-          <Text style={styles.updateButtonText}>تحديث الرصيد</Text>
-        </TouchableOpacity> */}
+
+        {/* Week Stats */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
+          <StatCard title="الربح" value={weekProfit} />
+          <StatCard title="الدخل" value={weekIncome} />
+        </View>
+
+        {/* Month Stats */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
+          <StatCard title="الربح" value={monthProfit} />
+          <StatCard title="الدخل" value={monthIncome} />
+        </View>
+
+        {/* Last Month Stats */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
+          <StatCard title="الربح" value={lastMonthProfit} />
+          <StatCard title="الدخل" value={lastMonthIncome} />
+        </View>
+
+        {/* Total Stats */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
+          <StatCard title="إجمالي الربح" value={allProfit} />
+          <StatCard title="إجمالي الدخل" value={allIncome} />
+        </View>
       </ScrollView>
 
       <Modal
@@ -233,16 +256,15 @@ const ProfileScreen = () => {
               placeholder="أدخل المبلغ (يمكن أن يكون سالبًا)"
               keyboardType="numeric"
               placeholderTextColor={"black"}
-              
             />
             <View style={styles.modalButtons}>
-            <TouchableOpacity 
-  style={styles.modalButton} 
-  onPress={() => changeBalance(Number(balanceChange))}>
-  <Text style={styles.modalButtonText}>تأكيد</Text>
-</TouchableOpacity>
-
-              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+              <TouchableOpacity style={styles.modalButton} onPress={changeBalance}>
+                <Text style={styles.modalButtonText}>تأكيد</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setModalVisible(false)}
+              >
                 <Text style={styles.modalButtonText}>إلغاء</Text>
               </TouchableOpacity>
             </View>
@@ -258,8 +280,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  statsContainer: {
+  balanceCard: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    margin: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  balanceContent: {
+    flex: 1,
+  },
+  balanceValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginBottom: 5,
+  },
+  balanceTitle: {
+    fontSize: 18,
+    color: '#333',
+  },
+  sectionContainer: {
     padding: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'left',
   },
   statCard: {
     backgroundColor: 'white',
@@ -283,18 +339,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
-  },
-  updateButton: {
-    backgroundColor: '#2196F3',
-    padding: 15,
-    borderRadius: 10,
-    margin: 15,
-    alignItems: 'center',
-  },
-  updateButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    width: '100%'
   },
   modalOverlay: {
     flex: 1,

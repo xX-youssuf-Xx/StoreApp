@@ -48,14 +48,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
     <SafeAreaView style={styles.topBarContainer}>
       <View style={styles.topBar}>
         <View style={styles.leftIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={onSettingsPress}>
-            <Icon name="ellipsis-v" size={20} color="#000" />
-          </TouchableOpacity>
           {showSearchIcon && (
             <TouchableOpacity style={styles.iconButton} onPress={toggleSearch}>
               <Icon name="search" size={20} color="#000" />
             </TouchableOpacity>
           )}
+          <TouchableOpacity style={styles.iconButton} onPress={onSettingsPress}>
+            <Icon name="ellipsis-v" size={20} color="#000" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.titleContainer}>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     height: 60,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     right: 10,
   },
   searchInputContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
   },
   searchBackButton: {

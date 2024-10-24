@@ -148,7 +148,7 @@ const ClientDetailsScreen = () => {
       </View>
       <View>
         <Text style={styles.receiptBalance}>
-          الرصيد الأولي: {item.initialBalance} ج.م
+          الرصيد السابق: {item.initialBalance} ج.م
         </Text>
         <Text style={styles.receiptTotal}>الإجمالي: {item.totalPrice} ج.م</Text>
       </View>
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     elevation: 2,

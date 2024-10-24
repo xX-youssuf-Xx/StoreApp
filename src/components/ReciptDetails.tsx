@@ -122,7 +122,7 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
           <h1 class="title">تفاصيل الإيصال</h1>
           
           <p class="text">رقم العميل: ${receipt?.client || 'غير محدد'}</p>
-          <p class="text">الرصيد الأولي: ${receipt?.initialBalance || 0} ج.م</p>
+          <p class="text">الرصيد السابق: ${receipt?.initialBalance || 0} ج.م</p>
   
           <h2 class="subtitle">المنتجات:</h2>
   
@@ -131,7 +131,7 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
           <div class="summary">
             <p class="summary-text">ملخص الحساب:</p>
             <div class="summary-row">
-              <span class="summary-label">الرصيد الأولي:</span>
+              <span class="summary-label">الرصيد السابق:</span>
               <span class="summary-value">${receipt?.initialBalance || 0} ج.م</span>
             </div>
             <div class="summary-row">
@@ -214,7 +214,7 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
 
             <Text style={styles.text}>رقم العميل: {receipt.client || 'غير محدد'}</Text>
             <Text style={styles.text}>
-              تاريخ الإيصال : {receipt.createdAt || 'غير محدد'}
+              تاريخ الإيصال : {receipt.createdAt  ? new Date(receipt.createdAt).toLocaleDateString() : 'غير محدد'}
             </Text>
 
             <Text style={styles.subtitle}>المنتجات:</Text>
@@ -276,7 +276,7 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
                 <Text style={styles.summaryValue}>
                   {receipt.initialBalance || 0} ج.م
                 </Text>
-                <Text style={styles.summaryLabel}>الرصيد الأولي:</Text>
+                <Text style={styles.summaryLabel}>الرصيد السابق:</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryValue}>
