@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
-import { getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit } from '../utils/stats';
+import { getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit, getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome } from '../utils/stats';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
 import { showMessage } from 'react-native-flash-message';
-import { updateAdminBalance } from '../utils/auth';
+import { getAdminBalance, updateAdminBalance } from '../utils/auth';
 import TopNav from '../../src/components/TopNav';
 
 const ProfileScreen = () => {
@@ -57,25 +57,76 @@ const ProfileScreen = () => {
         console.log(allProfit);
         setAllProfit(Number(allProfit));
       }
+
+      const todayIncome = await getTodayIncome(db!);
+      if(todayIncome) {
+        console.log("todayIncome");
+        console.log(todayIncome);
+        // JOE: SET THE STATs
+      }
+      
+      const weekIncome = await getWeekIncome(db!);
+      if(weekIncome) {
+        console.log("weekIncome");
+        console.log(weekIncome);
+        // JOE: SET THE STATs
+      }
+      const monthIncome = await getMonthIncome(db!);
+      if(monthIncome) {
+        console.log("monthIncome");
+        console.log(monthIncome);
+        // JOE: SET THE STATs
+      }
+      
+      const lastMonthIncome = await getLastMonthIncome(db!);
+      if(lastMonthIncome) {
+        console.log("lastMonthIncome");
+        console.log(lastMonthIncome);
+        // JOE: SET THE STATs
+      }
+      
+      const allIncome = await getAllIncome(db!);
+      if(allIncome) {
+        console.log("allIncome");
+        console.log(allIncome);
+        // JOE: SET THE STATs
+      }
     } catch (error) {
       handleError(error);
     }
   }
 
-  const changeBalance = async () => {
-    const amount = parseFloat(balanceChange);
-    if (isNaN(amount)) {
-      showMessage({
-        message: 'خطأ',
-        description: 'الرجاء إدخال رقم صحيح',
-        type: 'danger',
-        duration: 3000,
-        floating: true,
-        autoHide: true,
-      });
-      return;
+  const getBalance = async () => {
+    try {
+      const balance = await getAdminBalance(db!);
+      if(balance) {
+        console.log("balance");
+        console.log(balance);
+        // JOE: SET THE Balance
+      }
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        if (error.code === FIREBASE_ERROR) {
+          showMessage({
+            message: 'Success',
+            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
+            type: 'success',
+            duration: 3000,
+            floating: true,
+            autoHide: true,
+          });
+        } else if (error.code === FIREBASE_CREATING_ERROR) {
+          // JOE: ERROR CREATING THE INSTANCE
+        } else {
+          console.error('An error occurred with code:', error.code);
+        }
+      } else {
+        console.error('An unexpected error occurred:', error);
+      }
     }
-    
+  }
+
+  const changeBalance = async (amount: number) => {
     try {
       const key = await updateAdminBalance(db!, amount);
       if(key) {
@@ -132,6 +183,8 @@ const ProfileScreen = () => {
 
   useEffect(() => {
     getStats();
+    getBalance();
+    // changeBalance(-200);
   }, []);
 
   const StatCard = ({ title, value }: { title: string; value: number }) => (
@@ -183,9 +236,12 @@ const ProfileScreen = () => {
               
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={changeBalance}>
-                <Text style={styles.modalButtonText}>تأكيد</Text>
-              </TouchableOpacity>
+            <TouchableOpacity 
+  style={styles.modalButton} 
+  onPress={() => changeBalance(Number(balanceChange))}>
+  <Text style={styles.modalButtonText}>تأكيد</Text>
+</TouchableOpacity>
+
               <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>
                 <Text style={styles.modalButtonText}>إلغاء</Text>
               </TouchableOpacity>

@@ -229,3 +229,124 @@ export const getAllProfit = async (database: FirebaseDatabaseTypes.Module) : Pro
 
     return profit;
 }
+
+
+export const getTodayIncome = async (database: FirebaseDatabaseTypes.Module) : Promise<Number> => {
+    const receipts = await attemptFirebaseGet(database, '/receipts', REQUEST_LIMIT);
+    if(receipts === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+
+    let income = 0;
+
+    for(let key in receipts.val()) {
+        const receipt = receipts.val()[key];
+        if(receipt.createdAt) {
+            const now = new Date();
+            const receiptDate = new Date(receipt.createdAt);
+
+            if(receiptDate.getFullYear() == now.getFullYear() &&
+            receiptDate.getMonth() == now.getMonth() &&
+            receiptDate.getDate() == now.getDate()) {
+                income += receipt.moneyPaid;
+            }
+        }
+    }
+
+    return income;
+}
+
+export const getWeekIncome = async (database: FirebaseDatabaseTypes.Module) : Promise<Number> => {
+    const receipts = await attemptFirebaseGet(database, '/receipts', REQUEST_LIMIT);
+    if(receipts === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+
+    let income = 0;
+
+    const now = new Date();
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - (now.getDay() + 1) % 7);
+    const weekEnd = new Date();
+    weekEnd.setDate(now.getDate() + 7 - (now.getDay() + 1) % 7);
+
+    for(let key in receipts.val()) {
+        const receipt = receipts.val()[key];
+        if(receipt.createdAt) {
+            const receiptDate = new Date(receipt.createdAt);
+
+            if(receiptDate.getFullYear() == now.getFullYear() &&
+            receiptDate.getTime() >= weekStart.getTime() &&
+            receiptDate.getTime() < weekEnd.getTime()) {
+                income += receipt.moneyPaid;
+            }
+        }
+    }
+
+    return income;
+}
+
+export const getMonthIncome = async (database: FirebaseDatabaseTypes.Module) : Promise<Number> => {
+    const receipts = await attemptFirebaseGet(database, '/receipts', REQUEST_LIMIT);
+    if(receipts === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+
+    let income = 0;
+
+    for(let key in receipts.val()) {
+        const receipt = receipts.val()[key];
+        if(receipt.createdAt) {
+            const now = new Date();
+            const receiptDate = new Date(receipt.createdAt);
+
+            if(receiptDate.getFullYear() == now.getFullYear() &&
+            receiptDate.getMonth() == now.getMonth()) {
+                income += receipt.moneyPaid;
+            }
+        }
+    }
+
+    return income;
+}
+
+export const getLastMonthIncome = async (database: FirebaseDatabaseTypes.Module) : Promise<Number> => {
+    const receipts = await attemptFirebaseGet(database, '/receipts', REQUEST_LIMIT);
+    if(receipts === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+
+    let income = 0;
+
+    for(let key in receipts.val()) {
+        const receipt = receipts.val()[key];
+        if(receipt.createdAt) {
+            const now = new Date();
+            const receiptDate = new Date(receipt.createdAt);
+
+            if(receiptDate.getFullYear() == now.getFullYear() &&
+            ((receiptDate.getMonth() == (now.getMonth() - 1)) || 
+            (receiptDate.getMonth() == ((now.getMonth() - 1) % 12) && receiptDate.getFullYear() == (now.getFullYear() - 1)))) {
+                income += receipt.moneyPaid;
+            }
+        }
+    }
+
+    return income;
+}
+
+export const getAllIncome = async (database: FirebaseDatabaseTypes.Module) : Promise<Number> => {
+    const receipts = await attemptFirebaseGet(database, '/receipts', REQUEST_LIMIT);
+    if(receipts === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+
+    let income = 0;
+
+    for(let key in receipts.val()) {
+        const receipt = receipts.val()[key];        
+        income += receipt.moneyPaid;
+    }
+
+    return income;
+}
