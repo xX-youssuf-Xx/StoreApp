@@ -26,13 +26,9 @@ const LoginScreen = () => {
   const [name, setName] = useState("");
   const navigation = useNavigation<NavigationProp<any>>();
   const { db, setShouldOnline } = useFirebase();
-  const [s, setS] = useState(0);
 
   useEffect(() => {
     setShouldOnline(true);
-    // db?.ref('/count').on('value', (snapshot) => {
-    //   setS(snapshot.val());
-    // })
   }, []);
 
   const handleNameChange = (text: string) => {
@@ -109,7 +105,6 @@ const LoginScreen = () => {
             <View style={styles.formContainer}>
               <Text style={styles.headerText}>مرحبًا بك في تطبيقنا</Text>
               <Text style={styles.subHeaderText}>يرجى إدخال اسمك للمتابعة</Text>
-              <Text style={styles.subHeaderText}>S: {s}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="أدخل اسمك هنا"

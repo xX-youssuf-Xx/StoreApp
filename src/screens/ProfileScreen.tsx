@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
-import { 
+import {
   getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit,
-  getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome 
+  getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome
 } from '../utils/stats';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
@@ -21,7 +21,7 @@ const ProfileScreen = () => {
 
   // Balance state
   const [balance, setBalance] = useState(0);
-  
+
   // Profit states
   const [todayProfit, setTodayProfit] = useState(0);
   const [weekProfit, setWeekProfit] = useState(0);
@@ -58,7 +58,7 @@ const ProfileScreen = () => {
       if (today !== null && today !== undefined) {
         setTodayProfit(Number(today));
       }
-      
+
       const week = await getWeekProfit(db!);
       if (week !== null && week !== undefined) {
         setWeekProfit(Number(week));
@@ -68,12 +68,12 @@ const ProfileScreen = () => {
       if (month !== null && month !== undefined) {
         setMonthProfit(Number(month));
       }
-      
+
       const lastMonth = await getLastMonthProfit(db!);
       if (lastMonth !== null && lastMonth !== undefined) {
         setLastMonthProfit(Number(lastMonth));
       }
-      
+
       const all = await getAllProfit(db!);
       if (all !== null && all !== undefined) {
         setAllProfit(Number(all));
@@ -122,10 +122,10 @@ const ProfileScreen = () => {
       });
       return;
     }
-    
+
     try {
       const key = await updateAdminBalance(db!, amount);
-      if(key) {
+      if (key) {
         showMessage({
           message: 'نجاح',
           description: 'تم تحديث الرصيد بنجاح',
@@ -178,7 +178,7 @@ const ProfileScreen = () => {
 
   return (
     <>
-     {isMenuOpen && (
+      {isMenuOpen && (
         <LogoutMenu
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
@@ -187,9 +187,10 @@ const ProfileScreen = () => {
 
       <TopNav
         title="الحساب الشخصي"
-        onSettingsPress={() => {    setIsMenuOpen(!isMenuOpen);
+        onSettingsPress={() => {
+          setIsMenuOpen(!isMenuOpen);
         }}
-        onSearchChange={() => {}}
+        onSearchChange={() => { }}
         onBackPress={() => navigation.goBack()}
         showBackButton={false}
         showSearchIcon={false}
@@ -261,8 +262,8 @@ const ProfileScreen = () => {
               <TouchableOpacity style={styles.modalButton} onPress={changeBalance}>
                 <Text style={styles.modalButtonText}>تأكيد</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.modalButtonText}>إلغاء</Text>
