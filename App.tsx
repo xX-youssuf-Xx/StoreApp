@@ -55,6 +55,8 @@ const App: React.FC = () => {
   const checkAuth = async () => {
     console.log('Starting checkAuth');
     try {
+      await deleteItem('name');
+      await deleteItem('active');
       const name = await getItem('name');
       console.log('Retrieved name from storage:', name);
       if (!name) {

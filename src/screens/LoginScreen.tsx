@@ -26,13 +26,9 @@ const LoginScreen = () => {
   const [name, setName] = useState("");
   const navigation = useNavigation<NavigationProp<any>>();
   const { db, setShouldOnline } = useFirebase();
-  const [s, setS] = useState(0);
 
   useEffect(() => {
     setShouldOnline(true);
-    // db?.ref('/count').on('value', (snapshot) => {
-    //   setS(snapshot.val());
-    // })
   }, []);
 
   const handleNameChange = (text: string) => {

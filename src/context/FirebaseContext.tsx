@@ -1,13 +1,14 @@
-import {firebase, FirebaseDatabaseTypes} from '@react-native-firebase/database';
-import {createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from 'react';
-import {useLoading} from './LoadingContext';
-import {Text} from 'react-native';
-import {deleteItem, setItem} from '../utils/localStorage';
-import {emptyActiveUser} from '../utils/auth';
+import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database';
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
+import { useLoading } from './LoadingContext';
+import { Text } from 'react-native';
+import { deleteItem, setItem } from '../utils/localStorage';
+import { emptyActiveUser } from '../utils/auth';
 import Loading from '../components/Loading';
 import React from 'react';
-import {SafeAreaView, StyleSheet} from 'react-native';
+import { SafeAreaView, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 interface FirebaseContextType {
   db: FirebaseDatabaseTypes.Module | null;
@@ -21,10 +22,11 @@ interface FirebaseProviderProps {
   children: ReactNode;
 }
 
-export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
+export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [db, setDb] = useState<FirebaseDatabaseTypes.Module | null>(null);
   const [shouldOnline, setShouldOnline] = useState<Boolean>(false);
   const [online, setOnline] = useState<Boolean>(true);
+  const netInfo = useNetInfo();
   const database = firebase
     .app()
     .database(
@@ -37,7 +39,7 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
     try {
       setShouldOnline(true);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      if(online) {
+      if (online) {
         await deleteItem('active');
         await emptyActiveUser(database);
         return true;
@@ -50,21 +52,9 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
     }
   };
 
+
   const connectDB = async () => {
     setDb(database);
-    database
-    .ref('.info/connected')
-    .on('value', snapshot => {
-        console.log("snapshot.val()");
-        console.log(snapshot.val());
-        if (snapshot.val() === true) {
-          console.log("DATABASE is online");
-          setOnline(true);
-        } else {
-          console.log("DATABASE is offline");
-          setOnline(false);
-        }
-      });
   };
 
   useEffect(() => {
@@ -87,11 +77,11 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
   }
 
   return (
-    <FirebaseContext.Provider value={{db, backup, setShouldOnline}}>
+    <FirebaseContext.Provider value={{ db, backup, setShouldOnline }}>
       {children}
-      {shouldOnline && !online ? (
+      {shouldOnline && !netInfo.isConnected ? (
         <>{/* JOE: SHOW OFFLINE BIG DANGER SCREEN */}
-        <Text>SHOULD ONLINE AND NOT ONLINE</Text></>
+          <Text>SHOULD ONLINE AND NOT ONLINE</Text></>
       ) : null}
     </FirebaseContext.Provider>
   );
