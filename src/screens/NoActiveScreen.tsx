@@ -30,6 +30,8 @@ const NoActiveScreen = () => {
       console.log('Retrieved name from storage:', name);
       if (!name) {
         // JOE: transferr to login page
+        navigation.navigate('Login');
+
         return;
       }
 
@@ -44,6 +46,7 @@ const NoActiveScreen = () => {
           return true;
         }
       }
+      navigation.navigate('AlreadyActive');
 
       // JOE: transfer there is already an active user
     } catch (error) {

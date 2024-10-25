@@ -1,13 +1,14 @@
 import {firebase, FirebaseDatabaseTypes} from '@react-native-firebase/database';
 import {createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from 'react';
 import {useLoading} from './LoadingContext';
-import {Text} from 'react-native';
+import {Text, View} from 'react-native';
 import {deleteItem, setItem} from '../utils/localStorage';
 import {emptyActiveUser} from '../utils/auth';
 import Loading from '../components/Loading';
 import React from 'react';
 import {SafeAreaView, StyleSheet} from 'react-native';
 import LottieView from 'lottie-react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 interface FirebaseContextType {
   db: FirebaseDatabaseTypes.Module | null;
@@ -90,8 +91,41 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
     <FirebaseContext.Provider value={{db, backup, setShouldOnline}}>
       {children}
       {shouldOnline && !online ? (
-        <>{/* JOE: SHOW OFFLINE BIG DANGER SCREEN */}
-        <Text>SHOULD ONLINE AND NOT ONLINE</Text></>
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <MaterialIcons 
+            name="warning" 
+            size={80} 
+            color="#FFD700"
+            style={{marginBottom: 20}}
+          />
+          <Text style={{
+            color: 'white',
+            fontSize: 24,
+            fontWeight: 'bold',
+            marginBottom: 10,
+            textAlign: 'center'
+          }}>
+            No Internet Connection
+          </Text>
+          <Text style={{
+            color: '#cccccc',
+            fontSize: 16,
+            textAlign: 'center',
+            paddingHorizontal: 40
+          }}>
+            Please check your internet connection and try again
+          </Text>
+        </View>
       ) : null}
     </FirebaseContext.Provider>
   );

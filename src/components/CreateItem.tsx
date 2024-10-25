@@ -46,16 +46,19 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
 
   const calculateWeight = (qrString: string): string => {
     if (!qrString || !startIndex || !endIntegerIndex || !endDecimalIndex) return '';
-
+  
     const start = parseInt(startIndex) - 1;
     const middle = parseInt(endIntegerIndex);
     const end = parseInt(endDecimalIndex);
-
+  
     if (isNaN(start) || isNaN(middle) || isNaN(end)) return '';
-
+  
     const integerPart = qrString.substring(start, middle);
     const decimalPart = qrString.substring(middle, end);
-    return `${integerPart}.${decimalPart}`;
+    const weightInLbs = parseFloat(`${integerPart}.${decimalPart}`);
+    const weightInKgs = (weightInLbs * 0.455).toFixed(2);
+    
+    return weightInKgs;
   };
 
   const recalculateWeights = () => {
