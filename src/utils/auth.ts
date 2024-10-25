@@ -6,6 +6,8 @@ import { User } from "./types";
 
 export const getActiveUser = async (database: FirebaseDatabaseTypes.Module) : Promise<string> => {
     const user = await attemptFirebaseGet(database, '/active_user', REQUEST_LIMIT);
+    console.log("ACTIVE user retrieved");
+    console.log(user);
     if(user === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }
@@ -14,6 +16,8 @@ export const getActiveUser = async (database: FirebaseDatabaseTypes.Module) : Pr
 
 export const setActiveUser = async (database: FirebaseDatabaseTypes.Module, name: string) : Promise<string> => {
     const added = await attemptFirebaseUpdate(database, '/', 'active_user', name, REQUEST_LIMIT);
+    console.log("setActiveUser");
+    console.log(added);
     if(added === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }

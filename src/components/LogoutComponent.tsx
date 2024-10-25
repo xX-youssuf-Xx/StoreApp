@@ -31,8 +31,9 @@ const LogoutMenu: React.FC<LogoutMenuProps> = ({isOpen, onClose}) => {
 
   const handleLogout = async () => {
     try {
-      const result = await backup();
       console.log('logout clicked');
+      const result = await backup();
+      console.log('after logout clicked');
 
       if (result) {
         console.log(result);

@@ -10,26 +10,61 @@ import {
 } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
-import { getActiveUser } from '../utils/auth';
+import { getActiveUser, setActiveUser } from '../utils/auth';
 import MobileLogin from '../../assets/images/MobileLogin.svg';
+import { getItem, setItem } from '../utils/localStorage';
+import { showMessage } from 'react-native-flash-message';
+import { FIREBASE_ERROR } from '../config/Constants';
+import { FirebaseError } from '../errors/FirebaseError';
 
 const { width, height } = Dimensions.get('window');
 
 const NoActiveScreen = () => {
-  const [activeName, setActiveName] = useState('');
   const navigation = useNavigation<NavigationProp<any>>();
-  const { db } = useFirebase();
+  const { db, setShouldOnline } = useFirebase();
 
-  useEffect(() => {
-    const fetchActiveUser = async () => {
+  const handleRetry = async () => {
+    try {
+      setShouldOnline(true);
+      const name = await getItem('name');
+      console.log('Retrieved name from storage:', name);
+      if (!name) {
+        // JOE: transferr to login page
+        return;
+      }
 
-    };
 
-    fetchActiveUser();
-  }, [db]);
+      const activeUser = await getActiveUser(db!);
 
-  const handleRetry = () => {
-    
+      if (!activeUser) {
+        const res = await setActiveUser(db!, name);
+        if (res) {
+          await setItem('active', true);
+          navigation.navigate('MainTabs');
+          return true;
+        }
+      }
+
+      // JOE: transfer there is already an active user
+    } catch (error) {
+      console.error('Error in checkAuth:', error);
+      if (error instanceof FirebaseError) {
+        if (error.code === FIREBASE_ERROR) {
+          showMessage({
+            message: 'Error',
+            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
+            type: 'danger',
+            duration: 3000,
+            floating: true,
+            autoHide: true,
+          });
+        } else {
+          console.error('An error occurred with code:', error.code);
+        }
+      } else {
+        console.error('An unexpected error occurred:', error);
+      }
+    }
   };
 
   return (

@@ -18,7 +18,7 @@ import NoActiveScreen from './src/screens/NoActiveScreen';
 
 // Components
 import BottomTabBar from './src/components/BottomTabBar';
-import {getItem, setItem} from './src/utils/localStorage';
+import {deleteItem, getItem, setItem} from './src/utils/localStorage';
 import {getActiveUser, setActiveUser} from './src/utils/auth';
 import {FIREBASE_ERROR} from './src/config/Constants';
 import {FirebaseError} from './src/errors/FirebaseError';
@@ -64,7 +64,6 @@ const App: React.FC = () => {
       }
 
       const active = await getItem('active');
-      console.log('Retrieved active status from storage:', active);
       if (active) {
         console.log('Active user found, setting initialScreen to MainTabs');
         setInitialScreen('MainTabs');
