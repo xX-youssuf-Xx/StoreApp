@@ -80,7 +80,7 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   return (
     <FirebaseContext.Provider value={{ db, backup, setShouldOnline }}>
       {children}
-      {shouldOnline && !online ? (
+      {shouldOnline && !netInfo.isConnected ? (
         <View style={{
           position: 'absolute',
           top: 0,
