@@ -105,7 +105,6 @@ const LoginScreen = () => {
             <View style={styles.formContainer}>
               <Text style={styles.headerText}>مرحبًا بك في تطبيقنا</Text>
               <Text style={styles.subHeaderText}>يرجى إدخال اسمك للمتابعة</Text>
-              <Text style={styles.subHeaderText}>S: {s}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="أدخل اسمك هنا"
