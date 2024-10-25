@@ -23,7 +23,7 @@ import CreateClient from '../components/CreateClient';
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
-  const { db, goOffline, backup } = useFirebase();
+  const { db, setShouldOnline } = useFirebase();
 
   // Menu state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -77,7 +77,7 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    backup();
+    setShouldOnline(false);
     getTodayStats();
   }, []);
 

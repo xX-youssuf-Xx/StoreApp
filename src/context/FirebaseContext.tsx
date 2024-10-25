@@ -1,8 +1,8 @@
 import {firebase, FirebaseDatabaseTypes} from '@react-native-firebase/database';
-import {createContext, ReactNode, useContext, useEffect, useState} from 'react';
+import {createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from 'react';
 import {useLoading} from './LoadingContext';
 import {Text} from 'react-native';
-import {setItem} from '../utils/localStorage';
+import {deleteItem, setItem} from '../utils/localStorage';
 import {emptyActiveUser} from '../utils/auth';
 import Loading from '../components/Loading';
 import React from 'react';
@@ -11,8 +11,8 @@ import LottieView from 'lottie-react-native';
 
 interface FirebaseContextType {
   db: FirebaseDatabaseTypes.Module | null;
-  goOffline: () => Promise<void>;
   backup: () => Promise<Boolean>;
+  setShouldOnline: Dispatch<SetStateAction<Boolean>>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | null>(null);
@@ -23,7 +23,7 @@ interface FirebaseProviderProps {
 
 export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
   const [db, setDb] = useState<FirebaseDatabaseTypes.Module | null>(null);
-  const [shouldOnline, setShouldOnline] = useState<Boolean>(true);
+  const [shouldOnline, setShouldOnline] = useState<Boolean>(false);
   const [online, setOnline] = useState<Boolean>(true);
   const database = firebase
     .app()
@@ -33,20 +33,16 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
 
   database.setPersistenceEnabled(true);
 
-  const goOffline = async () => {
-    await db!.goOffline();
-    setShouldOnline(false);
-  };
-
   const backup = async () => {
     try {
-      await database.goOnline();
       setShouldOnline(true);
-      await new Promise(resolve => setTimeout(() => resolve, 10000));
-      await setItem('active', false);
-      await emptyActiveUser(database);
-      // await goOffline();
-      return true;
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      if(online) {
+        await deleteItem('active');
+        await emptyActiveUser(database);
+        return true;
+      }
+      return false;
     } catch (e) {
       console.log('ERROR');
       console.log(e);
@@ -56,27 +52,28 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
 
   const connectDB = async () => {
     setDb(database);
+    database
+    .ref('.info/connected')
+    .on('value', snapshot => {
+        console.log("snapshot.val()");
+        console.log(snapshot.val());
+        if (snapshot.val() === true) {
+          console.log("DATABASE is online");
+          setOnline(true);
+        } else {
+          console.log("DATABASE is offline");
+          setOnline(false);
+        }
+      });
   };
 
   useEffect(() => {
     connectDB();
-
-    firebase
-      .database()
-      .ref('.info/connected')
-      .on('value', snapshot => {
-        if (snapshot.val() === true) {
-          setOnline(true);
-        } else {
-          setOnline(false);
-        }
-      });
   }, []);
 
   if (!db) {
     return (
       <>
-        {/* JOE: LOADING SCREEN */}
         <SafeAreaView style={styles.splashContainer}>
           <LottieView
             source={require('../../assets/lotties/splashScreen.json')}
@@ -90,10 +87,11 @@ export const FirebaseProvider = ({children}: FirebaseProviderProps) => {
   }
 
   return (
-    <FirebaseContext.Provider value={{db, goOffline, backup}}>
+    <FirebaseContext.Provider value={{db, backup, setShouldOnline}}>
       {children}
       {shouldOnline && !online ? (
-        <>{/* JOE: SHOW OFFLINE BIG DANGER SCREEN */}</>
+        <>{/* JOE: SHOW OFFLINE BIG DANGER SCREEN */}
+        <Text>SHOULD ONLINE AND NOT ONLINE</Text></>
       ) : null}
     </FirebaseContext.Provider>
   );

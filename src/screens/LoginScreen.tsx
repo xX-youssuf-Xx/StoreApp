@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,15 @@ const { width, height } = Dimensions.get('window');
 const LoginScreen = () => {
   const [name, setName] = useState("");
   const navigation = useNavigation<NavigationProp<any>>();
-  const { db } = useFirebase();
+  const { db, setShouldOnline } = useFirebase();
+  const [s, setS] = useState(0);
+
+  useEffect(() => {
+    setShouldOnline(true);
+    // db?.ref('/count').on('value', (snapshot) => {
+    //   setS(snapshot.val());
+    // })
+  }, []);
 
   const handleNameChange = (text: string) => {
     setName(text);
@@ -101,6 +109,7 @@ const LoginScreen = () => {
             <View style={styles.formContainer}>
               <Text style={styles.headerText}>مرحبًا بك في تطبيقنا</Text>
               <Text style={styles.subHeaderText}>يرجى إدخال اسمك للمتابعة</Text>
+              <Text style={styles.subHeaderText}>S: {s}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="أدخل اسمك هنا"
