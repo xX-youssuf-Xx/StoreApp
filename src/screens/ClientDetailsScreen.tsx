@@ -39,6 +39,9 @@ const ClientDetailsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isReceiptDetailsVisible, setIsReceiptDetailsVisible] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [selectedReceiptUUid, setSelectedReceiptUUid] = useState<String | null>(
+    null,
+  );
 
   const navigation = useNavigation();
   const route = useRoute<ClientDetailsRouteProp>();
@@ -51,11 +54,11 @@ const ClientDetailsScreen = () => {
   }, [client.id]);
 
   const getClientReceipts = async (clientUuid: string) => {
-    console.log("used client uuid : ", clientUuid);
+    console.log('used client uuid : ', clientUuid);
     try {
       const fetchedReceipts = await getClientReceiptsHelper(db!, clientUuid);
       if (fetchedReceipts) {
-        console.log("fetchedReceipts:", fetchedReceipts);
+        console.log('fetchedReceipts:', fetchedReceipts);
         const formattedReceipts = Object.entries(fetchedReceipts)
           .filter(([_, data]) => data !== null) // Filter out null receipts
           .map(([id, data]) => ({
@@ -65,7 +68,9 @@ const ClientDetailsScreen = () => {
             moneyPaid: data.moneyPaid || 0,
             totalPrice: data.totalPrice || 0,
             products: data.products || {},
-            createdAt: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : 'N/A',
+            createdAt: data.createdAt
+              ? new Date(data.createdAt).toLocaleDateString()
+              : 'N/A',
           }));
         setReceipts(formattedReceipts);
         console.log('formatted : ', formattedReceipts);
@@ -89,12 +94,25 @@ const ClientDetailsScreen = () => {
     }
   };
 
-  const createReceipt = async (clientUuid: string, moneyPaid: number, pdfPath: string, uploadStateChange: (bytesTransferred: number, totalBytes: number) => void, products?: productsReceiptQuery) => {
+  const createReceipt = async (
+    clientUuid: string,
+    moneyPaid: number,
+    pdfPath: string,
+    uploadStateChange: (bytesTransferred: number, totalBytes: number) => void,
+    products?: productsReceiptQuery,
+  ) => {
     try {
-      const receiptUuid = await createReceiptHelper(db!, clientUuid, moneyPaid, pdfPath, uploadStateChange, products);
-      if(receiptUuid) {
-        console.log("receiptUuid");
-        console.log(receiptUuid); 
+      const receiptUuid = await createReceiptHelper(
+        db!,
+        clientUuid,
+        moneyPaid,
+        pdfPath,
+        uploadStateChange,
+        products,
+      );
+      if (receiptUuid) {
+        console.log('receiptUuid');
+        console.log(receiptUuid);
         // JOE: SET THE receipt
       }
     } catch (error) {
@@ -118,7 +136,6 @@ const ClientDetailsScreen = () => {
     }
   };
 
-
   const handleError = (error: unknown) => {
     if (error instanceof FirebaseError) {
       if (error.code === FIREBASE_ERROR) {
@@ -141,7 +158,10 @@ const ClientDetailsScreen = () => {
   const renderReceiptItem = ({item}: {item: Receipt}) => (
     <TouchableOpacity
       style={styles.receiptItem}
-      onPress={() => getReceiptDetails(item.id)}>
+      onPress={() => {
+        getReceiptDetails(item.id);
+        setSelectedReceiptUUid(item.id);
+      }}>
       <View style={styles.receiptInfo}>
         <Text style={styles.receiptDate}>{item.createdAt}</Text>
         <Text style={styles.receiptAmount}>المبلغ: {item.moneyPaid} ج.م</Text>
@@ -171,7 +191,7 @@ const ClientDetailsScreen = () => {
           <Text style={styles.clientNumber}>{client.number}</Text>
           <Text style={styles.clientBalance}>
             {' '}
-            الرصيد:الحالي {client.balance} ج.م
+             الرصيدالحالي: {client.balance} ج.م
           </Text>
         </View>
         <FlatList
@@ -187,19 +207,21 @@ const ClientDetailsScreen = () => {
           isVisible={isReceiptDetailsVisible}
           onClose={() => setIsReceiptDetailsVisible(false)}
           receipt={selectedReceipt}
+          receiptUuid={selectedReceiptUUid}
+          clientName={client.name}
         />
       )}
 
-<AddButton refresh={() => getClientReceipts(client.id)}>
-  {({closeModal, refresh}) => (
-    <CreateReceipt
-      clientId={client.id}
-      onClose={closeModal}
-      refresh={refresh}
-    />
-  )}
-</AddButton>
-
+      <AddButton refresh={() => getClientReceipts(client.id)}>
+        {({closeModal, refresh}) => (
+          <CreateReceipt
+            clientId={client.id}
+            clientName={client.name}
+            onClose={closeModal}
+            refresh={refresh}
+          />
+        )}
+      </AddButton>
     </>
   );
 };
@@ -233,8 +255,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 10,
-    paddingBottom:80
-
+    paddingBottom: 80,
   },
   receiptItem: {
     backgroundColor: 'white',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, ScrollView, StyleSheet } from 'react-native';
 import { useFirebase } from '../context/FirebaseContext';
 import { FIREBASE_CREATING_ERROR, FIREBASE_ERROR } from '../config/Constants';
 import { FirebaseError } from '../errors/FirebaseError';
@@ -14,23 +14,40 @@ interface CreateItemProps {
   productName: string;
 }
 
+type WeightUnit = 'kg' | 'lb';
+
 interface ItemData {
   weight: string;
   qrString: string;
+  unit: WeightUnit;
 }
 
 const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, productName }) => {
   const [boughtPrice, setBoughtPrice] = useState('');
-  const [items, setItems] = useState<ItemData[]>([{ weight: '', qrString: '' }]);
+  const [items, setItems] = useState<ItemData[]>([{ weight: '', qrString: '', unit: 'lb' }]);
   const [isQrScannerVisible, setIsQrScannerVisible] = useState(false);
   const [currentScanningIndex, setCurrentScanningIndex] = useState<number | null>(null);
   const [startIndex, setStartIndex] = useState('');
   const [endIntegerIndex, setEndIntegerIndex] = useState('');
   const [endDecimalIndex, setEndDecimalIndex] = useState('');
   const { db } = useFirebase();
+  const [defaultUnit, setDefaultUnit] = useState('lb');
+
+  const formatNumber = (num: number): string => {
+    return (Math.floor(num * 10000) / 10000).toString();
+  };
+
+  const convertWeight = (value: number, fromUnit: WeightUnit, toUnit: WeightUnit): number => {
+    if (fromUnit === toUnit) return value;
+    if (fromUnit === 'lb' && toUnit === 'kg') {
+      return value * 0.455;
+    }
+    // kg to lb 
+    return value * (1 / 0.455); 
+  };
 
   const addItem = () => {
-    setItems([...items, { weight: '', qrString: '' }]);
+    setItems([...items, { weight: '', qrString: '', unit: 'lb' }]);
   };
 
   const removeItem = (index: number) => {
@@ -38,9 +55,30 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
     setItems(newItems);
   };
 
-  const updateItem = (index: number, field: keyof ItemData, value: string) => {
+  const updateItem = (index: number, field: keyof ItemData, value: string | WeightUnit) => {
     const newItems = [...items];
-    newItems[index][field] = value;
+    const currentItem = { ...newItems[index] };
+
+    if (field === 'unit') {
+      // Type guard to ensure value is WeightUnit
+      if (value === 'kg' || value === 'lb') {
+        const currentWeight = parseFloat(currentItem.weight);
+        if (!isNaN(currentWeight)) {
+          const convertedWeight = convertWeight(
+            currentWeight,
+            currentItem.unit,
+            value
+          );
+          currentItem.weight = convertedWeight.toFixed(2);
+        }
+        currentItem.unit = value;
+      }
+    } else if (field === 'weight' || field === 'qrString') {
+      // Handle string fields
+      currentItem[field] = value as string;
+    }
+
+    newItems[index] = currentItem;
     setItems(newItems);
   };
 
@@ -56,15 +94,15 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
     const integerPart = qrString.substring(start, middle);
     const decimalPart = qrString.substring(middle, end);
     const weightInLbs = parseFloat(`${integerPart}.${decimalPart}`);
-    const weightInKgs = (weightInLbs * 0.455).toFixed(2);
+    const weightInKgs = convertWeight(weightInLbs, 'lb', 'kg');
     
-    return weightInKgs;
+    return weightInKgs.toFixed(2);
   };
 
   const recalculateWeights = () => {
     const newItems = items.map(item => ({
       ...item,
-      weight: calculateWeight(item.qrString)
+      weight: item.qrString ? calculateWeight(item.qrString) : item.weight
     }));
     setItems(newItems);
   };
@@ -73,45 +111,99 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
     recalculateWeights();
   }, [startIndex, endIntegerIndex, endDecimalIndex]);
 
+  const formatNumberTo4Decimals = (num: number): string => {
+    let numStr = num.toString();
+    const parts = numStr.split('.');
+    if (parts.length === 1) parts.push('0000');
+    if (parts[1].length < 4) {
+      parts[1] = parts[1].padEnd(4, '0');
+    } else if (parts[1].length > 4) {
+      parts[1] = parts[1].substring(0, 4);
+    }
+    return parts.join('.');
+  };
+
   const handleQrScan = (scannedData: string[]) => {
     if (currentScanningIndex !== null) {
       // Single item scan
       const newItems = [...items];
-      newItems[currentScanningIndex].qrString = scannedData[0];
-      newItems[currentScanningIndex].weight = calculateWeight(scannedData[0]);
+      const qrString = scannedData[0];
+      
+      if (!qrString) return;
+      
+      const weight = extractWeightFromQr(qrString);
+      newItems[currentScanningIndex] = {
+        weight: formatNumberTo4Decimals(weight),
+        qrString: qrString,
+        unit: 'lb' // Keep as lb
+      };
+      
       setItems(newItems);
       setIsQrScannerVisible(false);
       setCurrentScanningIndex(null);
     } else {
-      // Multiple items scan
-      const newItems = scannedData.map(qrString => ({
-        weight: calculateWeight(qrString),
-        qrString
+      // Multiple items scan - only add new items
+      const newScannedItems = scannedData.map(qrString => ({
+        weight: formatNumberTo4Decimals(extractWeightFromQr(qrString)),
+        qrString: qrString,
+        unit: 'lb' as WeightUnit
       }));
-      setItems([...items, ...newItems]);
+      
+      setItems(newScannedItems);
+      setIsQrScannerVisible(false);
     }
-    showMessage({
-      message: 'نجاح',
-      description: `تم مسح ${scannedData.length} عنصر بنجاح`,
-      type: 'success',
-      duration: 2000,
-      floating: true,
-      autoHide: true,
-    });
+  };
+
+  const extractWeightFromQr = (qrString: string): number => {
+    if (!qrString || !startIndex || !endIntegerIndex || !endDecimalIndex) return 0;
+  
+    const start = parseInt(startIndex) - 1;
+    const middle = parseInt(endIntegerIndex);
+    const end = parseInt(endDecimalIndex);
+  
+    if (isNaN(start) || isNaN(middle) || isNaN(end)) return 0;
+  
+    const integerPart = qrString.substring(start, middle);
+    const decimalPart = qrString.substring(middle, end);
+    return parseFloat(`${integerPart}.${decimalPart}`);
+  };
+
+  const validateItem = (item: ItemData): boolean => {
+    if (item.qrString) {
+      return !!item.weight;
+    }
+    return !!item.weight && !isNaN(parseFloat(item.weight));
+  };
+
+  const getWeightInKg = (item: ItemData): number => {
+    const weight = parseFloat(item.weight);
+    if (isNaN(weight)) return 0;
+    // Only convert if unit is lb
+    if (item.unit === 'lb') {
+      return weight * 0.455;
+    }
+    return weight;
   };
 
   const handleImport = async () => {
     try {
+      if (!boughtPrice || isNaN(parseFloat(boughtPrice))) {
+        throw new Error('الرجاء إدخال سعر شراء صحيح');
+      }
+
       for (const item of items) {
-        if (!item.weight || !item.qrString) {
-          throw new Error('بيانات الوزن أو رمز QR غير صالحة');
+        if (!validateItem(item)) {
+          throw new Error('الرجاء إدخال وزن صحيح لجميع العناصر');
         }
 
+        // Convert weight to kg only when sending to Firebase
+        const weightInKg = getWeightInKg(item);
+        
         await createItems(
           db!,
           productName,
           parseFloat(boughtPrice),
-          parseFloat(item.weight),
+          parseFloat(formatNumberTo4Decimals(weightInKg)),
           item.qrString
         );
       }
@@ -128,32 +220,54 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
       reloadProducts();
       closeModal();
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'خطأ',
-            description: 'حدث خطأ. يرجى المحاولة مرة أخرى لاحقًا.',
-            type: 'danger',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else if (error.code === FIREBASE_CREATING_ERROR) {
-          showMessage({
-            message: 'خطأ',
-            description: 'خطأ في إنشاء العنصر',
-            type: 'danger',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else {
-          console.error('حدث خطأ برمز:', error.code);
+      let errorMessage = 'حدث خطأ. يرجى المحاولة مرة أخرى لاحقًا.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error instanceof FirebaseError) {
+        if (error.code === FIREBASE_CREATING_ERROR) {
+          errorMessage = 'خطأ في إنشاء العنصر';
         }
-      } else {
-        console.error('حدث خطأ غير متوقع:', error);
+      }
+
+      showMessage({
+        message: 'خطأ',
+        description: errorMessage,
+        type: 'danger',
+        duration: 3000,
+        floating: true,
+        autoHide: true,
+      });
+    }
+  };
+
+  const handleWeightChange = (index: number, value: string) => {
+    const newItems = [...items];
+    const weight = parseFloat(value);
+    
+    if (!isNaN(weight)) {
+      newItems[index].weight = value;
+    } else {
+      newItems[index].weight = '';
+    }
+    
+    setItems(newItems);
+  };
+  
+  const handleUnitChange = (index: number, unit: WeightUnit) => {
+    const newItems = [...items];
+    const currentWeight = parseFloat(newItems[index].weight);
+    
+    if (!isNaN(currentWeight)) {
+      if (unit === 'kg' && newItems[index].unit === 'lb') {
+        newItems[index].weight = formatNumber(convertWeight(currentWeight, 'lb', 'kg'));
+      } else if (unit === 'lb' && newItems[index].unit === 'kg') {
+        newItems[index].weight = formatNumber(convertWeight(currentWeight, 'kg', 'lb'));
       }
     }
+    
+    newItems[index].unit = unit;
+    setItems(newItems);
   };
 
   const renderItem = ({ item, index }: { item: ItemData; index: number }) => (
@@ -166,21 +280,58 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
       </View>
       <View style={styles.itemInputContainer}>
         <TextInput
-          style={styles.itemInput}
+          style={[styles.itemInput, { flex: 2 }]}
           placeholder="الوزن"
           placeholderTextColor="#999"
           value={item.weight}
-          onChangeText={(value) => updateItem(index, 'weight', value)}
+          onChangeText={(value) => handleWeightChange(index, value)}
           keyboardType="numeric"
+          editable={!item.qrString}
         />
+        <View style={styles.unitSelector}>
+          <TouchableOpacity 
+            style={[
+              styles.unitOption,
+              item.unit === 'kg' && styles.selectedUnit
+            ]}
+            onPress={() => handleUnitChange(index, 'kg')}
+          >
+            <Text style={[
+              styles.unitText,
+              item.unit === 'kg' && styles.selectedUnitText
+            ]}>kg</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[
+              styles.unitOption,
+              item.unit === 'lb' && styles.selectedUnit
+            ]}
+            onPress={() => handleUnitChange(index, 'lb')}
+          >
+            <Text style={[
+              styles.unitText,
+              item.unit === 'lb' && styles.selectedUnitText
+            ]}>lb</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity 
-          style={styles.qrButton}
+          style={[
+            styles.qrButton,
+            item.unit === 'kg' && styles.disabledQrButton
+          ]}
           onPress={() => {
-            setCurrentScanningIndex(index);
-            setIsQrScannerVisible(true);
+            if (item.unit !== 'kg') {
+              setCurrentScanningIndex(index);
+              setIsQrScannerVisible(true);
+            }
           }}
+          disabled={item.unit === 'kg'}
         >
-          <Icon name="qr-code-scanner" size={24} color={item.qrString ? '#999' : '#000'} />
+          <Icon 
+            name="qr-code-scanner" 
+            size={24} 
+            color={item.unit === 'kg' ? '#ccc' : item.qrString ? '#999' : '#000'} 
+          />
         </TouchableOpacity>
       </View>
       {item.qrString && (
@@ -191,7 +342,7 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollContent}>
         <Text style={styles.title}>استيراد عناصر جديدة: {productName}</Text>
         
         <View style={styles.inputContainer}>
@@ -233,10 +384,13 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
           />
         </View>
 
-        <TouchableOpacity style={styles.scanButton} onPress={() => {
-          setCurrentScanningIndex(null);
-          setIsQrScannerVisible(true);
-        }}>
+        <TouchableOpacity 
+          style={styles.scanButton}
+          onPress={() => {
+            setCurrentScanningIndex(null);
+            setIsQrScannerVisible(true);
+          }}
+        >
           <Icon name="qr-code-scanner" size={24} color="#fff" />
           <Text style={styles.buttonText}>مسح رموز QR متعددة</Text>
         </TouchableOpacity>
@@ -272,6 +426,39 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
 };
 
 const styles = StyleSheet.create({
+  unitSelector: {
+    flexDirection: 'row',
+    marginHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    overflow: 'hidden',
+  },
+  unitOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+  },
+  selectedUnit: {
+    backgroundColor: '#007AFF',
+  },
+  unitText: {
+    color: '#000',
+    fontSize: 14,
+  },
+  selectedUnitText: {
+    color: '#fff',
+  },
+  itemInput: {
+    flex: 2,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    color:'black'
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -336,7 +523,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   itemHeader: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
@@ -352,18 +539,6 @@ const styles = StyleSheet.create({
   itemInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  itemInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: 'white',
-    marginRight: 8,
-    color: '#333',
-    fontSize: 14,
-    textAlign: 'right',
   },
   qrButton: {
     padding: 10,
@@ -414,6 +589,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 6,
+  },
+  disabledQrButton: {
+    backgroundColor: '#f0f0f0',
+    opacity: 0.5
   },
 });
 

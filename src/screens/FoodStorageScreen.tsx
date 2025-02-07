@@ -57,6 +57,7 @@ const FoodStorageScreen = () => {
     try {
       const products = await getAllProducts(db!);
       if (products) {
+        console.log('Products:-->  ', products);
         const formattedProducts = Object.entries(products).map(
           ([name, data]): Product => ({
             name,
@@ -289,7 +290,7 @@ const FoodStorageScreen = () => {
       <View style={styles.productInfo}>
         <Text style={styles.productItemCount}>العناصر: {item.itemCount}</Text>
         <Text style={styles.productBoxWeight}>
-          وزن الصندوق: {item.boxWeight} كجم
+          وزن العبوة: {item.boxWeight} كجم
         </Text>
       </View>
       <View>

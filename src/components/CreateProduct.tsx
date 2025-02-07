@@ -100,10 +100,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ closeModal, reloadProduct
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>وزن الصندوق:</Text>
+        <Text style={styles.label}>وزن العبوة:</Text>
         <TextInput
           style={styles.input}
-          placeholder="أدخل وزن الصندوق"
+          placeholder="أدخل وزن العبوة"
           placeholderTextColor="#999"
           value={boxWeight}
           onChangeText={setBoxWeight}

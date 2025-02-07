@@ -24,6 +24,22 @@ interface ExtendedItem extends Item {
   qrString?: string;
 }
 
+const convertKgToLb = (kg: number): number => {
+  return kg / 0.455;
+};
+
+const formatNumberTo4Decimals = (num: number): string => {
+  let numStr = num.toString();
+  const parts = numStr.split('.');
+  if (parts.length === 1) parts.push('0000');
+  if (parts[1].length < 4) {
+    parts[1] = parts[1].padEnd(4, '0');
+  } else if (parts[1].length > 4) {
+    parts[1] = parts[1].substring(0, 4);
+  }
+  return parts.join('.');
+};
+
 const ProductDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<ProductDetailsScreenRouteProp>();
@@ -48,14 +64,14 @@ const ProductDetailsScreen = () => {
       const fetchedProduct = await getProduct(db, productName);
       if (fetchedProduct) {
         setProductDetails(fetchedProduct);
-        const formattedItems = Object.entries(fetchedProduct.items).map(
-          ([id, item]) => ({
+        console.log('items:::', fetchedProduct.items);
+        const formattedItems = Object.entries(fetchedProduct.items)
+          .map(([id, item]) => ({
             id,
             ...(item as ExtendedItem),
             isExpanded: false,
-          }),
-        );
-        console.log('items:::' , formattedItems)
+          }))
+          .filter(item => item.weight > 0); // Filter out items with zero weight
         setProductItems(formattedItems);
       }
     } catch (error) {
@@ -99,19 +115,29 @@ const ProductDetailsScreen = () => {
       style={styles.itemCard}
       onPress={() => toggleItemExpansion(item.id)}>
       <View style={styles.itemInfo}>
-        <Text style={styles.itemWeight}>الوزن: {item.weight} كجم</Text>
+        <Text style={styles.itemWeight}>
+          الوزن: { (productDetails && productDetails?.isStatic) ? item.weight + ' kg' : formatNumberTo4Decimals(convertKgToLb(item.weight)) + ' lb'} 
+        </Text>
+
         <Text style={styles.itemPrice}>سعر الشراء: {item.boughtPrice} ج.م</Text>
       </View>
-      <View>
+      <View style={styles.itemDetails}>
         <Text style={styles.itemTotalWeight}>
-          الوزن الكلي: {item.totalWeight} كجم
+           الوزن الكلي: {(productDetails && productDetails?.isStatic) ? item.totalWeight + ' kg' : formatNumberTo4Decimals(convertKgToLb(item.totalWeight)) + ' lb'} 
         </Text>
+
         {item.qrString && (
           <Text style={styles.itemQR}>
             الكود:{' '}
             {item.isExpanded
               ? item.qrString
               : `${item.qrString.substring(0, 10)}...`}
+          </Text>
+        )}
+
+        {(productDetails && productDetails?.isStatic) && (
+          <Text style={styles.itemWeight}>
+            عدد العبوات: {Math.floor(item.weight / productDetails.boxWeight)}
           </Text>
         )}
       </View>
@@ -133,7 +159,7 @@ const ProductDetailsScreen = () => {
           <View style={styles.productSummary}>
             <View style={styles.summaryRow}>
               <Text style={styles.productAttribute}>
-                وزن الصندوق: {productDetails.boxWeight} كجم
+                وزن العبوة: {productDetails.boxWeight} كجم
               </Text>
               <Text style={styles.productAttribute}>
                 نوع: {productDetails.isStatic ? 'ثابت' : 'متغير'}
@@ -222,6 +248,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 5,
+  },
+  itemDetails: {
+    flexDirection: 'column',
   },
   itemWeight: {
     fontSize: 14,

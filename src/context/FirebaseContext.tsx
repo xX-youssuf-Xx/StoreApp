@@ -11,6 +11,26 @@ import LottieView from 'lottie-react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNetInfo } from '@react-native-community/netinfo';
 
+// Firebase web config
+const firebaseConfig = {
+  apiKey: "AIzaSyAJ5OZ34UfekaShL315qmgeERJ0zd5V55I",
+  authDomain: "storeapp-44934.firebaseapp.com",
+  databaseURL: "https://storeapp-44934-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "storeapp-44934",
+  storageBucket: "storeapp-44934.firebasestorage.app",
+  messagingSenderId: "640816735108",
+  appId: "1:640816735108:web:0cca1848ee9fb63825f3d1",
+  measurementId: "G-3P9XB447YS"
+};
+
+// Initialize Firebase if not already initialized
+let app : any;
+try {
+  app = firebase.app();
+} catch (error) {
+  app = firebase.initializeApp(firebaseConfig);
+}
+
 interface FirebaseContextType {
   db: FirebaseDatabaseTypes.Module | null;
   backup: () => Promise<Boolean>;
@@ -28,13 +48,22 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [shouldOnline, setShouldOnline] = useState<Boolean>(false);
   const [online, setOnline] = useState<Boolean>(true);
   const netInfo = useNetInfo();
-  const database = firebase
-    .app()
-    .database(
-      'https://storeapp-44934-default-rtdb.europe-west1.firebasedatabase.app',
-    );
 
-  database.setPersistenceEnabled(true);
+  // Use the initialized app
+  const database = app.database(firebaseConfig.databaseURL);
+
+  useEffect(() => {
+    const initializeDB = async () => {
+      try {
+        await database.setPersistenceEnabled(true);
+        setDb(database);
+      } catch (error) {
+        console.error('Error initializing database:', error);
+      }
+    };
+
+    initializeDB();
+  }, []);
 
   const backup = async () => {
     try {
@@ -52,15 +81,6 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       return false;
     }
   };
-
-
-  const connectDB = async () => {
-    setDb(database);
-  };
-
-  useEffect(() => {
-    connectDB();
-  }, []);
 
   if (!db) {
     return (

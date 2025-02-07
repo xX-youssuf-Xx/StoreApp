@@ -1,8 +1,9 @@
 {
   "project_info": {
     "project_number": "640816735108",
+    "firebase_url": "https://storeapp-44934-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "storeapp-44934",
-    "storage_bucket": "storeapp-44934.appspot.com"
+    "storage_bucket": "storeapp-44934.firebasestorage.app"
   },
   "client": [
     {
