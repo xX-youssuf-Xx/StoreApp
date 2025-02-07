@@ -63,6 +63,7 @@ const ClientDetailsScreen = () => {
           .filter(([_, data]) => data !== null) // Filter out null receipts
           .map(([id, data]) => ({
             id,
+            Rnumber: data.Rnumber || 0, // Add Rnumber
             client: data.client,
             initialBalance: data.initialBalance || 0,
             moneyPaid: data.moneyPaid || 0,
@@ -71,9 +72,15 @@ const ClientDetailsScreen = () => {
             createdAt: data.createdAt
               ? new Date(data.createdAt).toLocaleDateString()
               : 'N/A',
-          }));
-        setReceipts(formattedReceipts);
-        console.log('formatted : ', formattedReceipts);
+            // Add raw date for sorting
+            rawDate: data.createdAt ? new Date(data.createdAt) : new Date(0),
+          }))
+          .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime()); // Sort by date, newest first
+
+        // Remove rawDate before setting state
+        const receiptsForState = formattedReceipts.map(({ rawDate, ...rest }) => rest);
+        setReceipts(receiptsForState);
+        console.log('formatted : ', receiptsForState);
       }
     } catch (error) {
       handleError(error);
@@ -163,7 +170,9 @@ const ClientDetailsScreen = () => {
         setSelectedReceiptUUid(item.id);
       }}>
       <View style={styles.receiptInfo}>
-        <Text style={styles.receiptDate}>{item.createdAt}</Text>
+        <View style={styles.receiptHeader}>
+          <Text style={styles.receiptDate}>{item.createdAt}</Text>
+        </View>
         <Text style={styles.receiptAmount}>المبلغ: {item.moneyPaid} ج.م</Text>
       </View>
       <View>
@@ -188,10 +197,9 @@ const ClientDetailsScreen = () => {
       <View style={styles.container}>
         <View style={styles.clientSummary}>
           <Text style={styles.clientName}>{client.name}</Text>
-          <Text style={styles.clientNumber}>{client.number}</Text>
+          <Text style={styles.clientNumber}>رقم العميل: {client.number}</Text>
           <Text style={styles.clientBalance}>
-            {' '}
-             الرصيدالحالي: {client.balance} ج.م
+            الرصيدالحالي: {client.balance} ج.م
           </Text>
         </View>
         <FlatList
@@ -292,6 +300,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4CAF50',
     marginTop: 5,
+  },
+  receiptRNumber: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 5,
+    fontWeight: '500',
+  },
+  receiptHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+    gap: 10,
   },
 });
 

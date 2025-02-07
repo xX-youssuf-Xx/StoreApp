@@ -7,6 +7,7 @@ export type Item = {
     boughtPrice: number, 
     totalWeight: number,
     weight: number,
+    order: number,
     importedAt: string
 }
 
@@ -50,6 +51,7 @@ export type ReceiptProduct = {
 }
 
 export type Receipt = {
+    Rnumber: number,
     id: string
     client: string,
     initialBalance: number,

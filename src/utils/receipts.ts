@@ -47,7 +47,12 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
     uploadStateChange: (bytesTransferred: number, totalBytes: number) => void,
     products?: productsReceiptQuery) : Promise<string> => {
     
-        let totalPrice = 0;
+    // Get all receipts to determine the next receipt number
+    const allReceipts = await getAllReceipts(database);
+    const currentReceiptCount = allReceipts ? Object.keys(allReceipts).length : 0;
+    const nextReceiptNumber = currentReceiptCount + 1;
+
+    let totalPrice = 0;
     for (let productName in products) {
         let totalWeight = 0;
         for (let itemUuid in products[productName].items) {
@@ -66,6 +71,7 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
     const createdAt = (new Date()).toISOString();
 
     const receiptUuid = await attemptFirebasePush(database, `/receipts`, null, {
+        Rnumber: nextReceiptNumber, // Add receipt number
         client: clientUuid, 
         initialBalance: client.balance,
         moneyPaid: moneyPaid,

@@ -71,13 +71,20 @@ export const createItems = async (database: FirebaseDatabaseTypes.Module,
     boughtPrice: number, 
     weight: number, 
     qrString?: string) : Promise<string> => {
+    // Get current items to determine the order
+    const product = await getProduct(database, productName);
+    const currentItemsCount = product.items ? Object.keys(product.items).length : 0;
+    
+    // Create new item with order property
     const res = await attemptFirebasePush(database, `/inventory/${productName}/items`, null, {
         boughtPrice: boughtPrice,
         weight: weight,
         totalWeight: weight,
         qrString: qrString,
-        importedAt: (new Date()).toISOString()
+        importedAt: (new Date()).toISOString(),
+        order: currentItemsCount + 1 // Add order property
     }, REQUEST_LIMIT);
+
     if(res === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
     }

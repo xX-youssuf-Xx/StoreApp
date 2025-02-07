@@ -64,6 +64,7 @@ const CreateReceipt: React.FC<Props> = ({
   const [isQrScannerVisible, setIsQrScannerVisible] = useState(false);
   const [boxCount, setBoxCount] = useState<Record<string, string>>({});
   const [weightSearch, setWeightSearch] = useState('');
+  const [productOrder, setProductOrder] = useState<string[]>([]);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -107,10 +108,10 @@ const CreateReceipt: React.FC<Props> = ({
     setProductItems([]);
   };
 
+  // Update the handleProductSelect function to sort items by order
   const handleProductSelect = async (productName: string) => {
     resetModalState();
     const product = products.find(p => p.name === productName);
-    console.log('Selected Product:', product); // Add console.log
     if (!product) return;
 
     setSelectedProduct(product);
@@ -118,30 +119,38 @@ const CreateReceipt: React.FC<Props> = ({
       if (!db) throw new Error('Firebase database is not initialized');
       const fetchedProduct = await getProduct(db, product.name);
       if (fetchedProduct) {
-        if (
-          !fetchedProduct.items ||
-          Object.keys(fetchedProduct.items).length === 0
-        ) {
+        if (!fetchedProduct.items || Object.keys(fetchedProduct.items).length === 0) {
           Alert.alert('No Items', 'This product has no items available.');
           setProductItems([]);
           return;
         }
+
         const formattedItems = Object.entries(fetchedProduct.items)
           .map(([id, item]: [string, any], index) => ({
             id,
             ...item,
             displayName: `القطعة ${getArabicNumeral(index + 1)}`,
           }))
-          .filter(item => item.weight > 0); // Filter out zero-weight items
+          .filter(item => item.weight > 0);
 
-        setProductItems(formattedItems);
+        // Sort items by order property
+        const sortedItems = formattedItems.sort((a, b) => {
+          // Items with order property come first
+          if (a.order !== undefined && b.order === undefined) return -1;
+          if (a.order === undefined && b.order !== undefined) return 1;
+          // If both have order, sort by order value
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          // If neither has order, maintain original order
+          return 0;
+        });
+
+        setProductItems(sortedItems);
       }
     } catch (error) {
       console.error('Error fetching product details:', error);
-      Alert.alert(
-        'Error',
-        'Failed to fetch product details. Please try again.',
-      );
+      Alert.alert('Error', 'Failed to fetch product details. Please try again.');
     }
   };
 
@@ -182,35 +191,53 @@ const CreateReceipt: React.FC<Props> = ({
     );
   };
 
-  const handleAddToReceipt = () => {
-    if (!selectedProduct || selectedItems.length === 0 || !currentSellPrice) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  // Modify handleAddToReceipt function
+const handleAddToReceipt = () => {
+  if (!selectedProduct || selectedItems.length === 0 || !currentSellPrice) {
+    Alert.alert('Error', 'Please fill in all fields');
+    return;
+  }
+
+  // Sort selected items by their original order in productItems
+  const sortedSelectedItems = [...selectedItems].sort((a, b) => {
+    const itemA = productItems.find(item => item.id === a.id);
+    const itemB = productItems.find(item => item.id === b.id);
+    
+    if (!itemA || !itemB) return 0;
+    return (itemA.order || 0) - (itemB.order || 0);
+  });
+
+  const items: Record<string, number> = {};
+  sortedSelectedItems.forEach(item => {
+    if (item.weight > 0) {
+      items[item.id] = item.weight;
     }
+  });
 
-    const items: Record<string, number> = {};
-    selectedItems.forEach(item => {
-      if (item.weight > 0) {
-        items[item.id] = item.weight;
-      }
-    });
+  const productKey = selectedProduct.name;
+  
+  // Update productOrder state
+  setProductOrder(prev => {
+    const newOrder = prev.filter(key => key !== productKey);
+    return [...newOrder, productKey];
+  });
 
-    setReceipt({
-      ...receipt,
-      client: clientId,
-      products: {
-        ...receipt.products,
-        [selectedProduct.name]: {
-          sellPrice: parseFloat(currentSellPrice),
-          items,
-        },
+  setReceipt({
+    ...receipt,
+    client: clientId,
+    products: {
+      ...receipt.products,
+      [productKey]: {
+        sellPrice: parseFloat(currentSellPrice),
+        items,
       },
-    });
+    },
+  });
 
-    resetModalState();
-    setSelectedProduct(null);
-    setIsAddModalVisible(false);
-  };
+  resetModalState();
+  setSelectedProduct(null);
+  setIsAddModalVisible(false);
+};
 
   const handleRemoveProduct = (productName: string) => {
     const updatedProducts = {...receipt.products};
@@ -218,12 +245,18 @@ const CreateReceipt: React.FC<Props> = ({
     setReceipt({...receipt, products: updatedProducts});
   };
 
+  // Add a helper function for rounding
+  const roundToTwoDecimals = (num: number): number => {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  };
+
+  // Update the calculateTotal function
   const calculateTotal = (product: ReceiptProduct) => {
     const totalWeight = Object.values(product.items).reduce(
       (sum, weight) => sum + weight,
       0,
     );
-    return (totalWeight * product.sellPrice).toFixed(2);
+    return roundToTwoDecimals(totalWeight * product.sellPrice).toFixed(2);
   };
 
   const handleSaveReceipt = async () => {
@@ -456,67 +489,67 @@ const CreateReceipt: React.FC<Props> = ({
 
           <View style={styles.selectedItemsWrapper}>
             <Text style={styles.sectionTitle}>القطع المختارة:</Text>
-            <View style={styles.selectedItemsContainer}>
-              {selectedItems.map(item => {
-                const originalItem = productItems.find(i => i.id === item.id);
-                const product = filteredProducts.find(
-                  p => p.name === originalItem?.productName,
-                );
-                console.log('selected product', product)
-                return (
-                  <View key={item.id} style={styles.selectedItemBadge}>
-                    <View style={styles.badgeMain}>
-                      <Text style={styles.badgeText}>
-                        {originalItem?.displayName}
-                      </Text>
-                      {product?.isStatic ? (
-                        <View style={styles.boxCountContainer}>
-                          <TextInput
-                            style={styles.boxCountInput}
-                            placeholder="عدد العبوات"
-                            keyboardType="numeric"
-                            value={boxCount[item.id] || ''}
-                            onChangeText={value => {
-                              const numBoxes = parseInt(value) || 0;
-                              setBoxCount(prev => ({...prev, [item.id]: value}));
-                              setSelectedItems(prev =>
-                                prev.map(si =>
-                                  si.id === item.id
-                                    ? {
-                                        ...si,
-                                        weight: numBoxes * product.boxWeight,
-                                      }
-                                    : si,
-                                ),
-                              );
-                            }}
-                          />
-                          <Text style={styles.boxLabel}>عبوة</Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.weightText}>
-                          {(item.weight / 0.455).toFixed(2)} lb
+            <ScrollView style={styles.selectedItemsScroll}>
+              <View style={styles.selectedItemsContainer}>
+                {selectedItems.map(item => {
+                  const originalItem = productItems.find(i => i.id === item.id);
+                  const product = selectedProduct; // We already have the selected product
+                  return (
+                    <View key={item.id} style={styles.selectedItemBadge}>
+                      <View style={styles.badgeMain}>
+                        <Text style={styles.badgeText}>
+                          {originalItem?.displayName}
                         </Text>
-                      )}
+                        {product?.isStatic ? (
+                          <View style={styles.boxCountContainer}>
+                            <TextInput
+                              style={styles.boxCountInput}
+                              placeholder="عدد العبوات"
+                              placeholderTextColor="#999"
+                              keyboardType="numeric"
+                              value={boxCount[item.id] || ''}
+                              onChangeText={value => {
+                                const numBoxes = parseInt(value) || 0;
+                                setBoxCount(prev => ({...prev, [item.id]: value}));
+                                setSelectedItems(prev =>
+                                  prev.map(si =>
+                                    si.id === item.id
+                                      ? {
+                                          ...si,
+                                          weight: numBoxes * (product?.boxWeight || 0),
+                                        }
+                                      : si,
+                                  ),
+                                );
+                              }}
+                            />
+                            <Text style={styles.boxLabel}>عبوة</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.weightText}>
+                            {(item.weight / 0.455).toFixed(2)} lb
+                          </Text>
+                        )}
+                      </View>
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => {
+                          setSelectedItems(prev =>
+                            prev.filter(si => si.id !== item.id),
+                          );
+                          setBoxCount(prev => {
+                            const newBoxCount = {...prev};
+                            delete newBoxCount[item.id];
+                            return newBoxCount;
+                          });
+                        }}>
+                        <Text style={styles.removeButtonText}>×</Text>
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => {
-                        setSelectedItems(prev =>
-                          prev.filter(si => si.id !== item.id),
-                        );
-                        setBoxCount(prev => {
-                          const newBoxCount = {...prev};
-                          delete newBoxCount[item.id];
-                          return newBoxCount;
-                        });
-                      }}>
-                      <Text style={styles.removeButtonText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
           </View>
 
           <View style={styles.inputContainer}>
@@ -563,43 +596,50 @@ const CreateReceipt: React.FC<Props> = ({
           <Text style={styles.addProductButtonText}>إضافة منتج</Text>
         </TouchableOpacity>
 
-        {receipt.products &&
-          Object.entries(receipt.products).map(([productName, product]) => (
-            <View key={productName} style={styles.productCard}>
-              <View style={styles.productHeader}>
-                <Text style={styles.productName}>{productName}</Text>
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => handleRemoveProduct(productName)}>
-                  <Text style={styles.removeButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
+        {receipt.products && 
+          productOrder.map(productKey => {
+            const product = receipt.products && receipt.products[productKey];
+            if (!product) return null;
+            
+            return (
+              <View key={productKey} style={styles.productCard}>
+                <View style={styles.productHeader}>
+                  <Text style={styles.productName}>{productKey}</Text>
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => handleRemoveProduct(productKey)}>
+                    <Text style={styles.removeButtonText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.productPrice}>
+                  سعر البيع: {product.sellPrice} ج.م/كجم
+                </Text>
+                <Text style={styles.productTotal}>
+                  الإجمالي: {calculateTotal(product)} ج.م
+                </Text>
 
-              <Text style={styles.productPrice}>
-                سعر البيع: {product.sellPrice} ج.م/كجم
-              </Text>
-              <Text style={styles.productTotal}>
-                الإجمالي: {calculateTotal(product)} ج.م
-              </Text>
-
-              <View style={styles.itemsList}>
-                {Object.entries(product.items).map(
-                  ([itemId, weight], index) => (
-                    <Text key={itemId} style={styles.itemText}>
-                      القطعة {getArabicNumeral(index + 1)}: {weight} كجم
-                    </Text>
-                  ),
-                )}
+                <View style={styles.itemsList}>
+                  {Object.entries(product.items).map(
+                    ([itemId, weight], index) => (
+                      <Text key={itemId} style={styles.itemText}>
+                        القطعة {getArabicNumeral(index + 1)}: {weight} كجم
+                      </Text>
+                    ),
+                  )}
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
 
         <TextInput
           style={styles.moneyInput}
           placeholder="المبلغ المدفوع (ج.م)"
           keyboardType="numeric"
           value={moneyPaid}
-          onChangeText={setMoneyPaid}
+          onChangeText={(text) => {
+            const numValue = parseFloat(text) || 0;
+            setMoneyPaid(roundToTwoDecimals(numValue).toString());
+          }}
           placeholderTextColor="#666"
         />
 
@@ -671,11 +711,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1e3a8a',
   },
-  removeButtonText: {
-    color: '#dc2626',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
   productPrice: {
     fontSize: 16,
     color: '#1e40af',
@@ -727,7 +762,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 24,
-    maxHeight: '90%',
+    maxHeight: '95%', // Increased from 90%
   },
   modalTitle: {
     fontSize: 20,
@@ -754,6 +789,7 @@ const styles = StyleSheet.create({
   itemsContainer: {
     height: 200,
     marginBottom: 16,
+    flex: 0, // Prevent flex growing
   },
   itemsGrid: {
     flexDirection: 'row',
@@ -792,6 +828,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 16,
+    
   },
   badge: {
     flexDirection: 'row',
@@ -976,29 +1013,33 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   selectedItemsWrapper: {
-    marginTop: 20,
-    padding: 16,
+    marginTop: 16,
+    padding: 12,
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
+    height: 150, // Fixed height
+  },
+  selectedItemsScroll: {
+    flex: 1, // Take remaining space
   },
   selectedItemsContainer: {
-    marginTop: 20,
-    padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    paddingBottom: 8, // Add some padding at the bottom
   },
   selectedItemBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 25,
-    padding: 12,
+    borderRadius: 16,
+    padding: 8, // Reduced padding
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    marginBottom: 4,
   },
   badgeMain: {
     flexDirection: 'row',
@@ -1024,28 +1065,31 @@ const styles = StyleSheet.create({
     color: '#636e72',
   },
   removeButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#ff7675',
+    width: 18, // Reduced size
+    height: 18, // Reduced size
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    padding: 4,
+    justifyContent: 'flex-end',
+    marginLeft: 5,
   },
   boxCountInput: {
-    width: 60,
-    height: 30,
+    width: 80,
+    height: 35,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 4,
     marginLeft: 8,
     paddingHorizontal: 8,
     backgroundColor: '#fff',
+    color: '#000',
   },
+  removeButtonText: {
+    color: '#dc2626',
+    fontSize: 14, // Reduced size
+    fontWeight: 'bold',
+    lineHeight: 14,
+  },
+
 });
 
 export default CreateReceipt;

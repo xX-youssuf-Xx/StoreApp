@@ -71,7 +71,9 @@ const ProductDetailsScreen = () => {
             ...(item as ExtendedItem),
             isExpanded: false,
           }))
-          .filter(item => item.weight > 0); // Filter out items with zero weight
+          .filter(item => item.weight > 0) // Filter out items with zero weight
+          .sort((a, b) => a.order - b.order); // Sort by order property
+
         setProductItems(formattedItems);
       }
     } catch (error) {
