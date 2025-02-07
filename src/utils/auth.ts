@@ -3,6 +3,8 @@ import { attemptFirebaseGet, attemptFirebasePush, attemptFirebaseUpdate } from "
 import { FIREBASE_ERROR, REQUEST_LIMIT } from "../config/Constants";
 import { FirebaseError } from "../errors/FirebaseError";
 import { User } from "./types";
+import { getAllClients } from "./clitent";
+import { getAllProducts, getProduct } from "./inventory";
 
 export const getActiveUser = async (database: FirebaseDatabaseTypes.Module) : Promise<string> => {
     const user = await attemptFirebaseGet(database, '/active_user', REQUEST_LIMIT);
@@ -69,4 +71,32 @@ export const getAdminBalance = async (database: FirebaseDatabaseTypes.Module): P
     }
 
     return balance.val();
+}
+
+export const getPendingAdminBalance = async (database: FirebaseDatabaseTypes.Module): Promise<number> => {
+    const clients = await getAllClients(database);
+
+    let total = 0;
+    await Promise.all(Object.entries(clients).map(async ([_, client]) => {
+        total += client.balance;
+    }))
+
+    return total;
+}
+
+export const getInventoryTotalPrice = async (database: FirebaseDatabaseTypes.Module): Promise<number> => {
+    const products = await getAllProducts(database);
+    
+    let total = 0;
+    await Promise.allSettled(Object.entries(products).map(async ([name, product]) => {
+        const items = (await getProduct(database, name)).items;
+        console.log(items)
+
+        Object.entries(items).map(([_, item]) => {
+            total += item.weight * item.boughtPrice;
+        })
+    }))
+    
+
+    return total;
 }

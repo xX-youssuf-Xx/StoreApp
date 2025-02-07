@@ -9,7 +9,7 @@ import {
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
 import { showMessage } from 'react-native-flash-message';
-import { updateAdminBalance, getAdminBalance } from '../utils/auth';
+import { updateAdminBalance, getAdminBalance, getPendingAdminBalance, getInventoryTotalPrice } from '../utils/auth';
 import TopNav from '../../src/components/TopNav';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LogoutMenu from '../components/LogoutComponent';
@@ -21,6 +21,8 @@ const ProfileScreen = () => {
 
   // Balance state
   const [balance, setBalance] = useState(0);
+  const [pendingBalance, setPendingBalance] = useState(0);
+  const [inventoryTotalPrice, setInventoryTotalPrice] = useState(0);
 
   // Profit states
   const [todayProfit, setTodayProfit] = useState(0);
@@ -45,6 +47,16 @@ const ProfileScreen = () => {
       const currentBalance = await getAdminBalance(db!);
       if (currentBalance !== null && currentBalance !== undefined) {
         setBalance(Number(currentBalance));
+      }
+
+      const currentPendingBalance = await getPendingAdminBalance(db!);
+      if (currentPendingBalance !== null && currentPendingBalance !== undefined) {
+        setPendingBalance(Number(currentPendingBalance));
+      }
+
+      const currentInventoryTotalPriceBalance = await getInventoryTotalPrice(db!);
+      if (currentInventoryTotalPriceBalance !== null && currentInventoryTotalPriceBalance !== undefined) {
+        setInventoryTotalPrice(Number(currentInventoryTotalPriceBalance));
       }
     } catch (error) {
       handleError(error);
@@ -197,13 +209,29 @@ const ProfileScreen = () => {
       />
       <ScrollView style={styles.container}>
         {/* Balance Section */}
-        <TouchableOpacity style={styles.balanceCard} onPress={() => setModalVisible(true)}>
-          <View style={styles.balanceContent}>
-            <Text style={styles.balanceTitle}>الرصيد الحالي</Text>
-            <Text style={styles.balanceValue}>{balance.toFixed(2)} ج.م</Text>
+        <View style={styles.topContainer}>
+          <TouchableOpacity style={styles.balanceCard} onPress={() => setModalVisible(true)}>
+            <View style={styles.balanceContent}>
+              <Text style={styles.balanceTitle}>الرصيد الحالي</Text>
+              <Text style={styles.balanceValue}>{Math.floor(balance)} ج.م</Text>
+            </View>
+            <MaterialIcons name="edit" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+
+          <View style={styles.balanceCard}>
+            <View style={styles.balanceContent}>
+              <Text style={styles.balanceTitle}>الباقي عند العملاء</Text>
+              <Text style={styles.balanceValue}>{Math.floor(pendingBalance)} ج.م</Text>
+            </View>
           </View>
-          <MaterialIcons name="edit" size={24} color="#4CAF50" />
-        </TouchableOpacity>
+
+          <View style={styles.balanceCard}>
+            <View style={styles.balanceContent}>
+              <Text style={styles.balanceTitle}>سعر بضاعة المخزن</Text>
+              <Text style={styles.balanceValue}>{Math.floor(inventoryTotalPrice)} ج.م</Text>
+            </View>
+          </View>
+        </View>
 
         {/* Today's Stats */}
         <View style={styles.sectionContainer}>
@@ -281,11 +309,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  topContainer: {
+    marginBottom: 15,
+  },
   balanceCard: {
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
-    margin: 15,
+    marginHorizontal: 15,
+    marginTop: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

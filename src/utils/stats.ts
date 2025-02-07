@@ -94,6 +94,7 @@ export const getWeekProfit = async (database: FirebaseDatabaseTypes.Module) : Pr
                     if(importDate.getFullYear() == now.getFullYear() &&
                     importDate.getTime() >= weekStart.getTime() &&
                     importDate.getTime() < weekEnd.getTime()) {
+                        console.log("key", item.boughtPrice, item.totalWeight, item.boughtPrice * item.totalWeight);
                         profit -= item.boughtPrice * item.totalWeight;
                     }
                 }
@@ -350,3 +351,19 @@ export const getAllIncome = async (database: FirebaseDatabaseTypes.Module) : Pro
 
     return income;
 }
+
+// export const getAllIncome = async (database: FirebaseDatabaseTypes.Module) : Promise<Number> => {
+//     const receipts = await attemptFirebaseGet(database, '/receipts', REQUEST_LIMIT);
+//     if(receipts === FIREBASE_ERROR) {
+//         throw new FirebaseError(FIREBASE_ERROR);
+//     }
+
+//     let income = 0;
+
+//     for(let key in receipts.val()) {
+//         const receipt = receipts.val()[key];        
+//         income += receipt.moneyPaid;
+//     }
+
+//     return income;
+// }
