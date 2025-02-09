@@ -42,13 +42,13 @@ const HomeScreen = () => {
       // Fetch today's profit
       const profit = await getTodayProfit(db!);
       if (profit !== null && profit !== undefined) {
-        setTodayProfit(Number(profit));
+        setTodayProfit(Math.floor(Number(profit)));
       }
 
       // Fetch today's income
       const income = await getTodayIncome(db!);
       if (income !== null && income !== undefined) {
-        setTodayIncome(Number(income));
+        setTodayIncome(Math.floor(Number(income)));
       }
     } catch (error) {
       handleError(error);
@@ -105,7 +105,7 @@ const HomeScreen = () => {
   const StatCard = ({ title, value }: { title: string; value: number }) => (
     <View style={styles.statCard}>
       <Text style={styles.statTitle}>{title}</Text>
-      <Text style={styles.statValue}>{value.toFixed(2)} ج.م</Text>
+      <Text style={styles.statValue}>{value} ج.م</Text>
     </View>
   );
 

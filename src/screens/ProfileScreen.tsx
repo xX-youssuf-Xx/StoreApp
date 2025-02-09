@@ -68,53 +68,53 @@ const ProfileScreen = () => {
       // Fetch profit statistics
       const today = await getTodayProfit(db!);
       if (today !== null && today !== undefined) {
-        setTodayProfit(Number(today));
+        setTodayProfit(Math.floor(Number(today)));
       }
 
       const week = await getWeekProfit(db!);
       if (week !== null && week !== undefined) {
-        setWeekProfit(Number(week));
+        setWeekProfit(Math.floor(Number(week)));
       }
 
       const month = await getMonthProfit(db!);
       if (month !== null && month !== undefined) {
-        setMonthProfit(Number(month));
+        setMonthProfit(Math.floor(Number(month)));
       }
 
       const lastMonth = await getLastMonthProfit(db!);
       if (lastMonth !== null && lastMonth !== undefined) {
-        setLastMonthProfit(Number(lastMonth));
+        setLastMonthProfit(Math.floor(Number(lastMonth)));
       }
 
       const all = await getAllProfit(db!);
       if (all !== null && all !== undefined) {
-        setAllProfit(Number(all));
+        setAllProfit(Math.floor(Number(all)));
       }
 
       // Fetch income statistics
       const todayInc = await getTodayIncome(db!);
       if (todayInc !== null && todayInc !== undefined) {
-        setTodayIncome(Number(todayInc));
+        setTodayIncome(Math.floor(Number(todayInc)));
       }
 
       const weekInc = await getWeekIncome(db!);
       if (weekInc !== null && weekInc !== undefined) {
-        setWeekIncome(Number(weekInc));
+        setWeekIncome(Math.floor(Number(weekInc)));
       }
 
       const monthInc = await getMonthIncome(db!);
       if (monthInc !== null && monthInc !== undefined) {
-        setMonthIncome(Number(monthInc));
+        setMonthIncome(Math.floor(Number(monthInc)));
       }
 
       const lastMonthInc = await getLastMonthIncome(db!);
       if (lastMonthInc !== null && lastMonthInc !== undefined) {
-        setLastMonthIncome(Number(lastMonthInc));
+        setLastMonthIncome(Math.floor(Number(lastMonthInc)));
       }
 
       const allInc = await getAllIncome(db!);
       if (allInc !== null && allInc !== undefined) {
-        setAllIncome(Number(allInc));
+        setAllIncome(Math.floor(Number(allInc)));
       }
     } catch (error) {
       handleError(error);
@@ -184,7 +184,7 @@ const ProfileScreen = () => {
   const StatCard = ({ title, value }: { title: string; value: number }) => (
     <View style={styles.statCard}>
       <Text style={styles.statTitle}>{title}</Text>
-      <Text style={styles.statValue}>{value.toFixed(2)} ج.م</Text>
+      <Text style={styles.statValue}>{value} ج.م</Text>
     </View>
   );
 

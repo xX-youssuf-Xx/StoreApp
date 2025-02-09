@@ -53,14 +53,16 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
     const nextReceiptNumber = currentReceiptCount + 1;
 
     let totalPrice = 0;
+    let totalBoughtPrice = 0;
     for (let productName in products) {
         let totalWeight = 0;
-        for (let itemUuid in products[productName].items) {
-
+        await Promise.allSettled(Object.keys(products[productName].items).map(async (itemUuid) => {
             await reduceItem(database, productName, itemUuid, products[productName].items[itemUuid]);
             totalPrice += products[productName].items[itemUuid] * products[productName].sellPrice;
+            const item = await getProductItem(database, productName, itemUuid);
+            totalBoughtPrice += item.boughtPrice * products[productName].items[itemUuid];
             totalWeight += products[productName].items[itemUuid];
-        }
+        }));
         products[productName].totalWeight = totalWeight;
     }
     const client = await getClient(database, clientUuid);
@@ -77,6 +79,7 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
         moneyPaid: moneyPaid,
         products: products,
         totalPrice: totalPrice,
+        totalBoughtPrice: totalBoughtPrice,
         createdAt: createdAt
     }, REQUEST_LIMIT);
     if(receiptUuid === FIREBASE_ERROR) {

@@ -25,29 +25,30 @@ export const getTodayProfit = async (database: FirebaseDatabaseTypes.Module) : P
             if(receiptDate.getFullYear() == now.getFullYear() &&
             receiptDate.getMonth() == now.getMonth() &&
             receiptDate.getDate() == now.getDate()) {
-                profit += receipt.moneyPaid;
+                profit += receipt.totalPrice;
+                profit -= receipt.totalBoughtPrice;
             }
         }
     }
 
-    for(let key in imports.val()) {
-        const product : Product = imports.val()[key];
-        if(product.items) {
-            for(let itemKey in product.items) {
-                const item : Item = product.items[itemKey];
-                if(product.items[itemKey] && item.importedAt) {
-                    const now = new Date();
-                    const importDate = new Date(item.importedAt);
+    // for(let key in imports.val()) {
+    //     const product : Product = imports.val()[key];
+    //     if(product.items) {
+    //         for(let itemKey in product.items) {
+    //             const item : Item = product.items[itemKey];
+    //             if(product.items[itemKey] && item.importedAt) {
+    //                 const now = new Date();
+    //                 const importDate = new Date(item.importedAt);
 
-                    if(importDate.getFullYear() == now.getFullYear() &&
-                    importDate.getMonth() == now.getMonth() &&
-                    importDate.getDate() == now.getDate()) {
-                        profit -= item.boughtPrice * item.totalWeight;
-                    }
-                }
-            }
-        }
-    }
+    //                 if(importDate.getFullYear() == now.getFullYear() &&
+    //                 importDate.getMonth() == now.getMonth() &&
+    //                 importDate.getDate() == now.getDate()) {
+    //                     profit -= item.boughtPrice * item.totalWeight;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return profit;
 }
@@ -78,29 +79,30 @@ export const getWeekProfit = async (database: FirebaseDatabaseTypes.Module) : Pr
             if(receiptDate.getFullYear() == now.getFullYear() &&
             receiptDate.getTime() >= weekStart.getTime() &&
             receiptDate.getTime() < weekEnd.getTime()) {
-                profit += receipt.moneyPaid;
+                profit += receipt.totalPrice;
+                profit -= receipt.totalBoughtPrice;
             }
         }
     }
 
-    for(let key in imports.val()) {
-        const product : Product = imports.val()[key];
-        if(product.items) {
-            for(let itemKey in product.items) {
-                const item : Item = product.items[itemKey];
-                if(product.items[itemKey] && item.importedAt) {
-                    const importDate = new Date(item.importedAt);
+    // for(let key in imports.val()) {
+    //     const product : Product = imports.val()[key];
+    //     if(product.items) {
+    //         for(let itemKey in product.items) {
+    //             const item : Item = product.items[itemKey];
+    //             if(product.items[itemKey] && item.importedAt) {
+    //                 const importDate = new Date(item.importedAt);
 
-                    if(importDate.getFullYear() == now.getFullYear() &&
-                    importDate.getTime() >= weekStart.getTime() &&
-                    importDate.getTime() < weekEnd.getTime()) {
-                        console.log("key", item.boughtPrice, item.totalWeight, item.boughtPrice * item.totalWeight);
-                        profit -= item.boughtPrice * item.totalWeight;
-                    }
-                }
-            }
-        }
-    }
+    //                 if(importDate.getFullYear() == now.getFullYear() &&
+    //                 importDate.getTime() >= weekStart.getTime() &&
+    //                 importDate.getTime() < weekEnd.getTime()) {
+    //                     console.log("key", item.boughtPrice, item.totalWeight, item.boughtPrice * item.totalWeight);
+    //                     profit -= item.boughtPrice * item.totalWeight;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return profit;
 }
@@ -125,28 +127,29 @@ export const getMonthProfit = async (database: FirebaseDatabaseTypes.Module) : P
 
             if(receiptDate.getFullYear() == now.getFullYear() &&
             receiptDate.getMonth() == now.getMonth()) {
-                profit += receipt.moneyPaid;
+                profit += receipt.totalPrice;
+                profit -= receipt.totalBoughtPrice;
             }
         }
     }
 
-    for(let key in imports.val()) {
-        const product : Product = imports.val()[key];
-        if(product.items) {
-            for(let itemKey in product.items) {
-                const item : Item = product.items[itemKey];
-                if(product.items[itemKey] && item.importedAt) {
-                    const now = new Date();
-                    const importDate = new Date(item.importedAt);
+    // for(let key in imports.val()) {
+    //     const product : Product = imports.val()[key];
+    //     if(product.items) {
+    //         for(let itemKey in product.items) {
+    //             const item : Item = product.items[itemKey];
+    //             if(product.items[itemKey] && item.importedAt) {
+    //                 const now = new Date();
+    //                 const importDate = new Date(item.importedAt);
 
-                    if(importDate.getFullYear() == now.getFullYear() &&
-                    importDate.getMonth() == now.getMonth()) {
-                        profit -= item.boughtPrice * item.totalWeight;
-                    }
-                }
-            }
-        }
-    }
+    //                 if(importDate.getFullYear() == now.getFullYear() &&
+    //                 importDate.getMonth() == now.getMonth()) {
+    //                     profit -= item.boughtPrice * item.totalWeight;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return profit;
 }
@@ -172,29 +175,30 @@ export const getLastMonthProfit = async (database: FirebaseDatabaseTypes.Module)
             if(receiptDate.getFullYear() == now.getFullYear() &&
             ((receiptDate.getMonth() == (now.getMonth() - 1)) || 
             (receiptDate.getMonth() == ((now.getMonth() - 1) % 12) && receiptDate.getFullYear() == (now.getFullYear() - 1)))) {
-                profit += receipt.moneyPaid;
+                profit += receipt.totalPrice;
+                profit -= receipt.totalBoughtPrice;
             }
         }
     }
 
-    for(let key in imports.val()) {
-        const product : Product = imports.val()[key];
-        if(product.items) {
-            for(let itemKey in product.items) {
-                const item : Item = product.items[itemKey];
-                if(product.items[itemKey] && item.importedAt) {
-                    const now = new Date();
-                    const importDate = new Date(item.importedAt);
+    // for(let key in imports.val()) {
+    //     const product : Product = imports.val()[key];
+    //     if(product.items) {
+    //         for(let itemKey in product.items) {
+    //             const item : Item = product.items[itemKey];
+    //             if(product.items[itemKey] && item.importedAt) {
+    //                 const now = new Date();
+    //                 const importDate = new Date(item.importedAt);
 
-                    if(importDate.getFullYear() == now.getFullYear() &&
-                    ((importDate.getMonth() == (now.getMonth() - 1)) || 
-                    (importDate.getMonth() == ((now.getMonth() - 1) % 12) && importDate.getFullYear() == (now.getFullYear() - 1)))) {
-                        profit -= item.boughtPrice * item.totalWeight;
-                    }
-                }
-            }
-        }
-    }
+    //                 if(importDate.getFullYear() == now.getFullYear() &&
+    //                 ((importDate.getMonth() == (now.getMonth() - 1)) || 
+    //                 (importDate.getMonth() == ((now.getMonth() - 1) % 12) && importDate.getFullYear() == (now.getFullYear() - 1)))) {
+    //                     profit -= item.boughtPrice * item.totalWeight;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return profit;
 }
@@ -213,20 +217,21 @@ export const getAllProfit = async (database: FirebaseDatabaseTypes.Module) : Pro
 
     for(let key in receipts.val()) {
         const receipt = receipts.val()[key];        
-        profit += receipt.moneyPaid;
+        profit += receipt.totalPrice;
+        profit -= receipt.totalBoughtPrice;
     }
 
-    for(let key in imports.val()) {
-        const product : Product = imports.val()[key];
-        if(product.items) {
-            for(let itemKey in product.items) {
-                const item : Item = product.items[itemKey];
-                if(product.items[itemKey] && item.importedAt) {
-                    profit -= item.boughtPrice * item.totalWeight;
-                }
-            }
-        }
-    }
+    // for(let key in imports.val()) {
+    //     const product : Product = imports.val()[key];
+    //     if(product.items) {
+    //         for(let itemKey in product.items) {
+    //             const item : Item = product.items[itemKey];
+    //             if(product.items[itemKey] && item.importedAt) {
+    //                 profit -= item.boughtPrice * item.totalWeight;
+    //             }
+    //         }
+    //     }
+    // }
 
     return profit;
 }
