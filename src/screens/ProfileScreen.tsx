@@ -4,7 +4,12 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
 import {
   getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit,
-  getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome
+  getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome,
+  getTodaySales,
+  getWeekSales,
+  getMonthSales,
+  getLastMonthSales,
+  getAllSales
 } from '../utils/stats';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
@@ -37,6 +42,14 @@ const ProfileScreen = () => {
   const [monthIncome, setMonthIncome] = useState(0);
   const [lastMonthIncome, setLastMonthIncome] = useState(0);
   const [allIncome, setAllIncome] = useState(0);
+
+
+  // Sales states
+  const [todaySales, setTodaySales] = useState(0);
+  const [weekSales, setWeekSales] = useState(0);
+  const [monthSales, setMonthSales] = useState(0);
+  const [lastMonthSales, setLastMonthSales] = useState(0);
+  const [allSales, setAllSales] = useState(0);
 
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
@@ -115,6 +128,34 @@ const ProfileScreen = () => {
       const allInc = await getAllIncome(db!);
       if (allInc !== null && allInc !== undefined) {
         setAllIncome(Math.floor(Number(allInc)));
+      }
+
+      
+
+      // Fetch sales statistics
+      const todaySales = await getTodaySales(db!);
+      if (todaySales !== null && todaySales !== undefined) {
+        setTodaySales(Math.floor(Number(todaySales)));
+      }
+
+      const weekSales = await getWeekSales(db!);
+      if (weekSales !== null && weekSales !== undefined) {
+        setWeekSales(Math.floor(Number(weekSales)));
+      }
+
+      const monthSales = await getMonthSales(db!);
+      if (monthSales !== null && monthSales !== undefined) {
+        setMonthSales(Math.floor(Number(monthSales)));
+      }
+
+      const lastMonthSales = await getLastMonthSales(db!);
+      if (lastMonthSales !== null && lastMonthSales !== undefined) {
+        setLastMonthSales(Math.floor(Number(lastMonthSales)));
+      }
+
+      const allSales = await getAllSales(db!);
+      if (allSales !== null && allSales !== undefined) {
+        setAllSales(Math.floor(Number(allSales)));
       }
     } catch (error) {
       handleError(error);
@@ -238,6 +279,7 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
           <StatCard title="الربح" value={todayProfit} />
           <StatCard title="الدخل" value={todayIncome} />
+          <StatCard title="المبيعات" value={todaySales} />
         </View>
 
         {/* Week Stats */}
@@ -245,6 +287,7 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
           <StatCard title="الربح" value={weekProfit} />
           <StatCard title="الدخل" value={weekIncome} />
+          <StatCard title="المبيعات" value={weekSales} />
         </View>
 
         {/* Month Stats */}
@@ -252,6 +295,7 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
           <StatCard title="الربح" value={monthProfit} />
           <StatCard title="الدخل" value={monthIncome} />
+          <StatCard title="المبيعات" value={monthSales} />
         </View>
 
         {/* Last Month Stats */}
@@ -259,6 +303,7 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
           <StatCard title="الربح" value={lastMonthProfit} />
           <StatCard title="الدخل" value={lastMonthIncome} />
+          <StatCard title="المبيعات" value={lastMonthSales} />
         </View>
 
         {/* Total Stats */}
@@ -266,6 +311,7 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
           <StatCard title="إجمالي الربح" value={allProfit} />
           <StatCard title="إجمالي الدخل" value={allIncome} />
+          <StatCard title="إجمالي المبيعات" value={allSales} />
         </View>
       </ScrollView>
 
