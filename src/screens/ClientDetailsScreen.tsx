@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl} from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import TopNav from '../../src/components/TopNav';
 import {useFirebase} from '../context/FirebaseContext';
@@ -42,6 +42,7 @@ const ClientDetailsScreen = () => {
   const [selectedReceiptUUid, setSelectedReceiptUUid] = useState<String | null>(
     null,
   );
+  const [refreshing, setRefreshing] = useState(false);
 
   const navigation = useNavigation();
   const route = useRoute<ClientDetailsRouteProp>();
@@ -162,6 +163,11 @@ const ClientDetailsScreen = () => {
     }
   };
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    getClientReceipts(client.id).finally(() => setRefreshing(false));
+  }, [client.id]);
+
   const renderReceiptItem = ({item}: {item: Receipt}) => (
     <TouchableOpacity
       style={styles.receiptItem}
@@ -207,6 +213,14 @@ const ClientDetailsScreen = () => {
           renderItem={renderReceiptItem}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#2196F3']} // Android
+              tintColor="#2196F3" // iOS
+            />
+          }
         />
       </View>
 

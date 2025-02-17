@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl} from 'react-native';
 import TopNav from '../../src/components/TopNav';
 import React, {useEffect, useState} from 'react';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
@@ -37,6 +37,7 @@ const ClientsScreen = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const getClients = async () => {
     try {
@@ -221,6 +222,11 @@ const ClientsScreen = () => {
     navigation.goBack();
   };
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    getClients().finally(() => setRefreshing(false));
+  }, []);
+
   const renderClientItem = ({item}: {item: Client}) => (
     <TouchableOpacity
       style={styles.clientItem}
@@ -261,6 +267,14 @@ const ClientsScreen = () => {
           renderItem={renderClientItem}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#2196F3']} // Android
+              tintColor="#2196F3" // iOS
+            />
+          }
         />
       </View>
       <AddButton refresh={getClients}>

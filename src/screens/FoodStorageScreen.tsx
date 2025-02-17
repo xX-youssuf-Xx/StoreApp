@@ -15,6 +15,7 @@ import {
   Button,
   FlatList,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import TopNav from '../../src/components/TopNav';
 import React, {useEffect, useState} from 'react';
@@ -50,6 +51,7 @@ const FoodStorageScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const getInventory = async () => {
     setIsLoading(true);
@@ -59,15 +61,24 @@ const FoodStorageScreen = () => {
       if (products) {
         console.log('Products:-->  ', products);
         const formattedProducts = Object.entries(products).map(
-          ([name, data]): Product => ({
-            name,
-            itemCount: Object.keys(data.items || {}).length,
-            items: data.items,
-            isStatic: Boolean(data.isStatic),
-            isQrable: Boolean(data.isQrable),
-            boxWeight: Number(data.boxWeight) || 0,
-          }),
+          ([name, data]): Product => {
+            // Count only items with weight > 0
+            const validItemsCount = Object.values(data.items || {}).filter(
+              (item: any) => item && item.weight > 0
+            ).length;
+
+            return {
+              name,
+              itemCount: validItemsCount, // Use the filtered count
+              items: data.items,
+              isStatic: Boolean(data.isStatic),
+              isQrable: Boolean(data.isQrable),
+              boxWeight: Number(data.boxWeight) || 0,
+            };
+          }
         );
+        
+        console.log('Formatted products with valid item counts:', formattedProducts);
         setProducts(formattedProducts);
         setFilteredProducts(formattedProducts);
       }
@@ -281,6 +292,11 @@ const FoodStorageScreen = () => {
     navigation.goBack();
   };
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    getInventory().finally(() => setRefreshing(false));
+  }, []);
+
   const renderProductItem = ({item}: {item: Product}) => (
     <TouchableOpacity
       style={styles.productItem}
@@ -348,8 +364,14 @@ const FoodStorageScreen = () => {
             keyExtractor={(item) => item.name}
             contentContainerStyle={styles.listContainer}
             ListEmptyComponent={renderEmptyList}
-            refreshing={isLoading}
-            onRefresh={getInventory}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#2196F3']} // Android
+                tintColor="#2196F3" // iOS
+              />
+            }
           />
         )}
       </View>

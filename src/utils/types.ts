@@ -45,6 +45,7 @@ export type ClientsType = {
 export type ReceiptProduct = {
     sellPrice: number,
     totalWeight?: number,
+    Pnumber: number, // Add this line
     items: {
         [itemId: string]: number
     }

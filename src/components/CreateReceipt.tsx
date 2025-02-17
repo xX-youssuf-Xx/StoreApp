@@ -216,6 +216,10 @@ const handleAddToReceipt = () => {
 
   const productKey = selectedProduct.name;
   
+  // Calculate next Pnumber
+  const currentProducts = receipt.products || {};
+  const nextPnumber = Object.keys(currentProducts).length + 1;
+
   // Update productOrder state
   setProductOrder(prev => {
     const newOrder = prev.filter(key => key !== productKey);
@@ -230,6 +234,7 @@ const handleAddToReceipt = () => {
       [productKey]: {
         sellPrice: parseFloat(currentSellPrice),
         items,
+        Pnumber: nextPnumber, // Add the Pnumber property
       },
     },
   });
@@ -242,6 +247,12 @@ const handleAddToReceipt = () => {
   const handleRemoveProduct = (productName: string) => {
     const updatedProducts = {...receipt.products};
     delete updatedProducts[productName];
+    
+    // Reorder remaining products
+    Object.values(updatedProducts).forEach((product, index) => {
+      product.Pnumber = index + 1;
+    });
+    
     setReceipt({...receipt, products: updatedProducts});
   };
 
@@ -270,6 +281,7 @@ const handleAddToReceipt = () => {
             'تعديل رصيد': {
               sellPrice: 0,
               totalWeight: 0,
+              Pnumber: 1, // Add Pnumber
               items: {'تعديل رصيد': 0},
             },
           },
@@ -293,6 +305,7 @@ const handleAddToReceipt = () => {
           'تعديل رصيد': {
             sellPrice: 0,
             totalWeight: 0,
+            Pnumber: 1, // Add Pnumber
             items: {'تعديل رصيد': 0},
           },
         },
@@ -597,48 +610,53 @@ const handleAddToReceipt = () => {
         </TouchableOpacity>
 
         {receipt.products && 
-          productOrder.map(productKey => {
-            const product = receipt.products && receipt.products[productKey];
-            if (!product) return null;
-            
-            return (
-              <View key={productKey} style={styles.productCard}>
-                <View style={styles.productHeader}>
-                  <Text style={styles.productName}>{productKey}</Text>
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleRemoveProduct(productKey)}>
-                    <Text style={styles.removeButtonText}>×</Text>
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.productPrice}>
-                  سعر البيع: {product.sellPrice} ج.م/كجم
+  Object.entries(receipt.products)
+    .sort(([, a], [, b]) => a.Pnumber - b.Pnumber)
+    .map(([productKey, product]) => {
+      return (
+        <View key={productKey} style={styles.productCard}>
+          <View style={styles.productHeader}>
+            <Text style={styles.productName}>{productKey}</Text>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleRemoveProduct(productKey)}>
+              <Text style={styles.removeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.productPrice}>
+            سعر البيع: {product.sellPrice} ج.م/كجم
+          </Text>
+          <Text style={styles.productTotal}>
+            الإجمالي: {calculateTotal(product)} ج.م
+          </Text>
+          <View style={styles.itemsList}>
+            {Object.entries(product.items).map(
+              ([itemId, weight], index) => (
+                <Text key={itemId} style={styles.itemText}>
+                  القطعة {getArabicNumeral(index + 1)}: {weight} كجم
                 </Text>
-                <Text style={styles.productTotal}>
-                  الإجمالي: {calculateTotal(product)} ج.م
-                </Text>
-
-                <View style={styles.itemsList}>
-                  {Object.entries(product.items).map(
-                    ([itemId, weight], index) => (
-                      <Text key={itemId} style={styles.itemText}>
-                        القطعة {getArabicNumeral(index + 1)}: {weight} كجم
-                      </Text>
-                    ),
-                  )}
-                </View>
-              </View>
-            );
-          })}
+              ),
+            )}
+          </View>
+        </View>
+      );
+    })}
 
         <TextInput
           style={styles.moneyInput}
           placeholder="المبلغ المدفوع (ج.م)"
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
           value={moneyPaid}
           onChangeText={(text) => {
-            const numValue = parseFloat(text) || 0;
-            setMoneyPaid(roundToTwoDecimals(numValue).toString());
+            // Allow negative sign, digits, and one decimal point
+            if (/^-?\d*\.?\d*$/.test(text) || text === '-') {
+              const numValue = text === '-' ? 0 : parseFloat(text);
+              if (!isNaN(numValue)) {
+                setMoneyPaid(text);
+              } else {
+                setMoneyPaid('0');
+              }
+            }
           }}
           placeholderTextColor="#666"
         />

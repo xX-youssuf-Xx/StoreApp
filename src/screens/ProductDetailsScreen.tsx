@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl} from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import TopNav from '../../src/components/TopNav';
 import {useFirebase} from '../context/FirebaseContext';
@@ -49,37 +49,84 @@ const ProductDetailsScreen = () => {
   const [productItems, setProductItems] = useState<
     (ExtendedItem & {id: string; isExpanded: boolean})[]
   >([]);
-
-  useEffect(() => {
-    if (db) {
-      getProductDetails(product.name);
-    }
-  }, [product.name, db]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const getProductDetails = async (productName: string) => {
     try {
       if (!db) {
         throw new Error('Firebase database is not initialized');
       }
+      
+      // Add debug logging
+      console.log('Fetching product details for:', productName);
+      
       const fetchedProduct = await getProduct(db, productName);
+      
+      // Debug log the raw fetched data
+      console.log('Raw fetched product:', JSON.stringify(fetchedProduct, null, 2));
+      
       if (fetchedProduct) {
         setProductDetails(fetchedProduct);
-        console.log('items:::', fetchedProduct.items);
-        const formattedItems = Object.entries(fetchedProduct.items)
-          .map(([id, item]) => ({
-            id,
-            ...(item as ExtendedItem),
-            isExpanded: false,
-          }))
-          .filter(item => item.weight > 0) // Filter out items with zero weight
-          .sort((a, b) => a.order - b.order); // Sort by order property
+        
+        // Check if items exist
+        if (!fetchedProduct.items) {
+          console.log('No items found in fetched product');
+          setProductItems([]);
+          return;
+        }
 
+        console.log('Raw items:', fetchedProduct.items);
+        
+        const formattedItems = Object.entries(fetchedProduct.items)
+          .filter(([_, data]) => data !== null && data !== undefined) // Filter out null/undefined items
+          .map(([id, item]) => {
+            console.log(`Processing item ${id}:`, item); // Debug log each item
+            return {
+              id,
+              ...(item as ExtendedItem),
+              isExpanded: false,
+            };
+          })
+          .filter(item => {
+            const isValid = item && item.weight > 0;
+            if (!isValid) {
+              console.log('Filtering out invalid item:', item);
+            }
+            return isValid;
+          })
+          .sort((a, b) => a.order - b.order);
+
+        console.log('Formatted items:', formattedItems);
+        
         setProductItems(formattedItems);
+      } else {
+        console.log('No product found');
+        setProductItems([]);
+        setProductDetails(null);
       }
     } catch (error) {
+      console.error('Error in getProductDetails:', error);
       handleError(error);
     }
   };
+
+  // Add cleanup on component unmount
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchData = async () => {
+      if (db && mounted) {
+        await getProductDetails(product.name);
+      }
+    };
+
+    fetchData();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
+  }, [product.name, db]);
 
   const handleError = (error: unknown) => {
     if (error instanceof FirebaseError) {
@@ -107,6 +154,11 @@ const ProductDetailsScreen = () => {
       ),
     );
   };
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    getProductDetails(product.name).finally(() => setRefreshing(false));
+  }, [product.name]);
 
   const renderItemDetails = ({
     item,
@@ -183,6 +235,14 @@ const ProductDetailsScreen = () => {
           renderItem={renderItemDetails}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#2196F3']} // Android
+              tintColor="#2196F3" // iOS
+            />
+          }
         />
       </View>
 
