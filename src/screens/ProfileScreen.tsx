@@ -232,7 +232,8 @@ const ProfileScreen = () => {
   return (
     <>
       {isMenuOpen && (
-        <LogoutMenu
+                <LogoutMenu
+          isFoodStorage={true}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
         />

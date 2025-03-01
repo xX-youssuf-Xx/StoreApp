@@ -52,6 +52,7 @@ const ClientsScreen = () => {
         }));
         setClients(formattedClients);
         setFilteredClients(formattedClients);
+        console.log('clients : ' , formattedClients);
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -247,7 +248,8 @@ const ClientsScreen = () => {
   return (
     <>
          {isMenuOpen && (
-        <LogoutMenu
+                <LogoutMenu
+          isFoodStorage={true}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
         />

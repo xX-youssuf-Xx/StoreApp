@@ -5,8 +5,10 @@ import {useFirebase} from '../context/FirebaseContext';
 import Svg, {Path, Polyline, Line} from 'react-native-svg';
 
 interface LogoutMenuProps {
+  isFoodStorage: boolean;
   isOpen: boolean;
   onClose: () => void;
+  onGetSummary?: () => void;  // Add new prop for the callback
 }
 
 const LogoutIcon = () => (
@@ -25,7 +27,12 @@ const LogoutIcon = () => (
   </Svg>
 );
 
-const LogoutMenu: React.FC<LogoutMenuProps> = ({isOpen, onClose}) => {
+const LogoutMenu: React.FC<LogoutMenuProps> = ({
+  isFoodStorage,
+  isOpen,
+  onClose,
+  onGetSummary,
+}) => {
   const navigation = useNavigation<NavigationProp<any>>();
   const {backup} = useFirebase();
 
@@ -57,6 +64,24 @@ const LogoutMenu: React.FC<LogoutMenuProps> = ({isOpen, onClose}) => {
 
       {/* Menu */}
       <View style={styles.menuContainer}>
+        {isFoodStorage && onGetSummary && (
+          <TouchableOpacity style={styles.menuItem} onPress={onGetSummary}>
+            <Svg
+              width={16}
+              height={16}
+              viewBox="0 0 24 24"
+              stroke="gray"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none">
+              <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <Polyline points="17 8 12 3 7 8" />
+              <Line x1="12" y1="3" x2="12" y2="15" />
+            </Svg>
+            <Text style={styles.menuText}>export Data</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <LogoutIcon />
           <Text style={styles.menuText}>Logout</Text>
@@ -101,6 +126,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   menuText: {
     fontSize: 14,

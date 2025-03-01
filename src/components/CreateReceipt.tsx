@@ -50,7 +50,7 @@ const CreateReceipt: React.FC<Props> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productItems, setProductItems] = useState<any[]>([]);
-  const [moneyPaid, setMoneyPaid] = useState('0');
+  const [moneyPaid, setMoneyPaid] = useState('');
   const [receipt, setReceipt] = useState<{
     client?: string;
     products?: Record<string, ReceiptProduct>;
@@ -474,8 +474,8 @@ const handleAddToReceipt = () => {
                         selectedItems.find(i => i.id === item.id) &&
                           styles.selectedItemCard,
                       ]}
-                      onPress={() => handleItemSelect(item)}>
-                      <Text style={styles.itemName}>{item.displayName}</Text>
+                       onPress={() => handleItemSelect(item)}>
+                      {/* <Text style={styles.itemName}>{item.displayName}</Text> */}
                       {selectedProduct.isStatic ? (
                         <>
                           <Text style={styles.itemWeight}>
@@ -644,7 +644,7 @@ const handleAddToReceipt = () => {
 
         <TextInput
           style={styles.moneyInput}
-          placeholder="المبلغ المدفوع (ج.م)"
+          placeholder="0"
           keyboardType="decimal-pad"
           value={moneyPaid}
           onChangeText={(text) => {
