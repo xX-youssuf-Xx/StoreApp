@@ -20,6 +20,7 @@ import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
 import { showMessage } from 'react-native-flash-message';
 import CreateProduct from '../components/CreateProduct';
 import CreateClient from '../components/CreateClient';
+import Svg, { Path, Polyline, Line } from 'react-native-svg';
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -102,6 +103,10 @@ const HomeScreen = () => {
     console.log('Reload function called');
   };
 
+  const handleStoragePress = () => {
+    navigation.navigate('StorageDetails');
+  };
+
   const StatCard = ({ title, value }: { title: string; value: number }) => (
     <View style={styles.statCard}>
       <Text style={styles.statTitle}>{title}</Text>
@@ -114,6 +119,23 @@ const HomeScreen = () => {
       <MaterialIcons name={icon} size={32} color="#4CAF50" />
       <Text style={styles.actionTitle}>{title}</Text>
     </TouchableOpacity>
+  );
+
+  const UpArrowIcon = () => (
+    <Svg
+      width={32}
+      height={32}
+      viewBox="0 0 24 24"
+      stroke="#4CAF50"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+      style={{ transform: [{ rotate: '-90deg' }] }}>
+      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <Polyline points="16 17 21 12 16 7" />
+      <Line x1="21" y1="12" x2="9" y2="12" />
+    </Svg>
   );
 
   // Custom Modal Component
@@ -169,6 +191,11 @@ const HomeScreen = () => {
             icon="add-box"
             onPress={handleAddProduct}
           />
+          {/* Add this new ActionCard */}
+          <TouchableOpacity style={styles.actionCard} onPress={handleStoragePress}>
+            <UpArrowIcon />
+            <Text style={styles.actionTitle}>المخزن</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -195,7 +222,7 @@ const HomeScreen = () => {
 
       {isMenuOpen && (
                 <LogoutMenu
-          isFoodStorage={true}
+          isFoodStorage={false}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
         />
@@ -254,7 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -266,7 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     marginLeft: 15,
-    textAlign: 'left',
+    textAlign: 'right',
     flex: 1,
   },
   // Modal styles

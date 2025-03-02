@@ -22,6 +22,7 @@ export type Product = {
     boxWeight: number, 
     isQrable: Boolean, 
     isStatic: Boolean,
+    isKgInTable: Boolean, // Add this new property
     items: Item[],
     qrData?: qrDataType,
     itemCount?:  number
@@ -52,6 +53,9 @@ export type ReceiptProduct = {
 }
 
 export type Receipt = {
+    totalBoughtPrice: any
+    returnedAt: any
+    status: string
     Rnumber: number,
     id: string
     client: string,

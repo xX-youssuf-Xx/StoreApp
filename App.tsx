@@ -26,6 +26,7 @@ import {useFirebase} from './src/context/FirebaseContext';
 import {useLoading} from './src/context/LoadingContext';
 import ClientDetailsScreen from './src/screens/ClientDetailsScreen';
 import ProductDetailsScreen from './src/screens/ProductDetailsScreen';
+import StorageDetailsScreen from './src/screens/StorageDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -148,6 +149,7 @@ const App: React.FC = () => {
             <Stack.Screen name="NoActiveUser" component={NoActiveScreen} />
             <Stack.Screen name="ClientDetails" component={ClientDetailsScreen} />
             <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+            <Stack.Screen name="StorageDetails" component={StorageDetailsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
       </GestureHandlerRootView>

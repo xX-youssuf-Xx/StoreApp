@@ -427,7 +427,7 @@ const CreateItem: React.FC<CreateItemProps> = ({ closeModal, reloadProducts, pro
 
 const styles = StyleSheet.create({
   unitSelector: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     marginHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   weightInputContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   itemInputContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
   },
   qrButton: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     backgroundColor: '#2196F3',
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bottomButtonsContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     padding: 16,
     backgroundColor: '#f5f5f5',
@@ -569,12 +569,13 @@ const styles = StyleSheet.create({
   addButton: {
     flex: 1,
     backgroundColor: '#4CAF50',
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
     borderRadius: 8,
     marginRight: 8,
+    marginLeft: 18,
   },
   importButton: {
     flex: 1,

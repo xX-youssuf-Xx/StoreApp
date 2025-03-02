@@ -6,8 +6,6 @@ import { FirebaseError } from '../errors/FirebaseError';
 import { showMessage } from 'react-native-flash-message';
 import { createProduct } from '../utils/inventory';
 
-// Force RTL layout
-I18nManager.forceRTL(true);
 
 
 interface CreateProductProps {
@@ -19,9 +17,18 @@ const CreateProduct: React.FC<CreateProductProps> = ({ closeModal, reloadProduct
   const [productName, setProductName] = useState('');
   const [isStatic, setIsStatic] = useState(false);
   const [isQrable, setIsQrable] = useState(false);
+  const [isKgInTable, setIsKgInTable] = useState(false);
   const [boxWeight, setBoxWeight] = useState('0');
 
   const { db } = useFirebase();
+
+  // Update isKgInTable when isStatic changes
+  const handleStaticChange = (value: boolean) => {
+    setIsStatic(value);
+    if (value) {
+      setIsKgInTable(false);
+    }
+  };
 
   const handleCreate = async () => {
     try {
@@ -31,6 +38,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ closeModal, reloadProduct
         isStatic,
         isQrable,
         Number(boxWeight),
+        isKgInTable, // Add new parameter
       );
       if (key) {
         console.log(key);
@@ -78,44 +86,74 @@ const CreateProduct: React.FC<CreateProductProps> = ({ closeModal, reloadProduct
     <View style={styles.container}>
       <Text style={styles.title}>إنشاء منتج جديد</Text>
       
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>اسم المنتج:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="أدخل اسم المنتج"
-          placeholderTextColor="#999"
-          value={productName}
-          onChangeText={setProductName}
-        />
-      </View>
+      <View style={styles.formCard}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>اسم المنتج:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="أدخل اسم المنتج"
+            placeholderTextColor="#999"
+            value={productName}
+            onChangeText={setProductName}
+          />
+        </View>
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>ثابت:</Text>
-        <Switch value={isStatic} onValueChange={setIsStatic} />
-      </View>
+        <View style={styles.switchContainer}>
+          <Text style={styles.label}>ثابت:</Text>
+          <Switch
+            value={isStatic}
+            onValueChange={handleStaticChange}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={isStatic ? '#007AFF' : '#f4f3f4'}
+          />
+        </View>
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>قابل للمسح الضوئي:</Text>
-        <Switch value={isQrable} onValueChange={setIsQrable} />
-      </View>
+        <View style={styles.switchContainer}>
+          <Text style={styles.label}>قابل للمسح الضوئي:</Text>
+          <Switch
+            value={isQrable}
+            onValueChange={setIsQrable}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={isQrable ? '#007AFF' : '#f4f3f4'}
+          />
+        </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>وزن العبوة:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="أدخل وزن العبوة"
-          placeholderTextColor="#999"
-          value={boxWeight}
-          onChangeText={setBoxWeight}
-          keyboardType="numeric"
-        />
+        {!isStatic && (
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>الوحدة كيلو فالجدول:</Text>
+            <Switch
+              value={isKgInTable}
+              onValueChange={setIsKgInTable}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={isKgInTable ? '#007AFF' : '#f4f3f4'}
+            />
+          </View>
+        )}
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>وزن العبوة:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="أدخل وزن العبوة"
+            placeholderTextColor="#999"
+            value={boxWeight}
+            onChangeText={setBoxWeight}
+            keyboardType="numeric"
+          />
+        </View>
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleCreate}>
+        <TouchableOpacity
+          style={[styles.button, styles.createButton]}
+          onPress={handleCreate}
+        >
           <Text style={styles.buttonText}>إنشاء منتج</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={closeModal}>
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+          onPress={closeModal}
+        >
           <Text style={styles.buttonText}>إلغاء</Text>
         </TouchableOpacity>
       </View>
@@ -126,51 +164,67 @@ const CreateProduct: React.FC<CreateProductProps> = ({ closeModal, reloadProduct
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 15,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  formCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 24,
     textAlign: 'center',
-    color: '#333',
+    color: '#2c3e50',
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
     fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-    textAlign: 'left',
+    marginBottom: 8,
+    color: '#2c3e50',
+    textAlign: 'right',
+    fontWeight: '500',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: 'white',
-    color: 'black',
+    borderColor: '#e1e8ed',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    color: '#2c3e50',
     textAlign: 'right',
+    fontSize: 16,
   },
   switchContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 16,
+    paddingVertical: 8,
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
-    marginTop: 20,
+    gap: 12,
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 5,
+    padding: 14,
+    borderRadius: 8,
     flex: 1,
-    marginHorizontal: 5,
+    elevation: 2,
+  },
+  createButton: {
+    backgroundColor: '#007AFF',
   },
   cancelButton: {
     backgroundColor: '#FF3B30',

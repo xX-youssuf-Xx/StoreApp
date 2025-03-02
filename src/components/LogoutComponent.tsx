@@ -106,9 +106,9 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: 'absolute',
-    right: 8,
+    left: 8,
     top: 64,
-    width: 180,
+    width: 120,
     backgroundColor: 'white',
     borderRadius: 8,
     shadowColor: '#000',
@@ -132,6 +132,8 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 14,
     color: '#333',
+    textAlign: 'left',
+    width: '80%',
   },
 });
 

@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#003366',
-    textAlign: 'left',
+    textAlign: 'right',
   },
   input: {
     borderWidth: 1,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     marginTop: 25,
   },

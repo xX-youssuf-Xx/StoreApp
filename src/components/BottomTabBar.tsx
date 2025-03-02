@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#ddd',
   },
   tabBar: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 8,
   },

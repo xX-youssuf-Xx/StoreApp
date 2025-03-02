@@ -80,7 +80,8 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
         products: products,
         totalPrice: totalPrice,
         totalBoughtPrice: totalBoughtPrice,
-        createdAt: createdAt
+        createdAt: createdAt,
+        status: 'active'  // Add this line
     }, REQUEST_LIMIT);
     if(receiptUuid === FIREBASE_ERROR) {
         throw new FirebaseError(FIREBASE_ERROR);
@@ -120,3 +121,89 @@ export const createReceiptHelper = async (database: FirebaseDatabaseTypes.Module
     
     return receiptUuid;
 }
+
+export const returnReceiptHelper = async (database: FirebaseDatabaseTypes.Module, receiptUuid: string) => {
+    try {
+        // 1. Get the receipt details
+        const receipt = await getReceipt(database, receiptUuid);
+        if (!receipt || receipt.status === 'returned') {
+            throw new FirebaseError(FIREBASE_ERROR);
+        }
+
+        // 2. Return weights to inventory
+        for (const productName in receipt.products) {
+            const product = receipt.products[productName];
+            for (const itemId in product.items) {
+                const weight = product.items[itemId];
+                
+                // Get current item weight
+                const item = await getProductItem(database, productName, itemId);
+                if (!item) continue;
+
+                // Update item weight by adding back the original amount
+                const res = await attemptFirebaseUpdate(
+                    database,
+                    `/inventory/${productName}/items/${itemId}`,
+                    'weight',
+                    item.weight + weight,
+                    REQUEST_LIMIT
+                );
+
+                if (res === FIREBASE_ERROR) {
+                    throw new FirebaseError(FIREBASE_ERROR);
+                }
+            }
+        }
+
+        // 3. Update client balance
+        const client = await getClient(database, receipt.client);
+        if (!client) {
+            throw new FirebaseError(FIREBASE_CREATING_ERROR);
+        }
+
+        // Reverse the balance changes
+        const reversedBalance = client.balance - receipt.totalPrice + receipt.moneyPaid;
+        const balanceRes = await updateClientBalance(database, receipt.client, reversedBalance);
+        if (!balanceRes) {
+            throw new FirebaseError(FIREBASE_CREATING_ERROR);
+        }
+
+        // 4. Update admin balance (reverse the money paid)
+        const adminBalanceRes = await updateAdminBalance(database, -receipt.moneyPaid);
+        if (!adminBalanceRes) {
+            throw new FirebaseError(FIREBASE_CREATING_ERROR);
+        }
+
+        // 5. Update receipt status to returned
+        const statusRes = await attemptFirebaseUpdate(
+            database,
+            `/receipts/${receiptUuid}`,
+            'status',
+            'returned',
+            REQUEST_LIMIT
+        );
+
+        if (statusRes === FIREBASE_ERROR) {
+            throw new FirebaseError(FIREBASE_ERROR);
+        }
+
+        // 6. Add return timestamp
+        const returnedAtRes = await attemptFirebaseUpdate(
+            database,
+            `/receipts/${receiptUuid}`,
+            'returnedAt',
+            new Date().toISOString(),
+            REQUEST_LIMIT
+        );
+
+        if (returnedAtRes === FIREBASE_ERROR) {
+            throw new FirebaseError(FIREBASE_ERROR);
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error('Error returning receipt:', error);
+        throw error;
+    }
+};

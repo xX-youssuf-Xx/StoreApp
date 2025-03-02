@@ -233,7 +233,7 @@ const ProfileScreen = () => {
     <>
       {isMenuOpen && (
                 <LogoutMenu
-          isFoodStorage={true}
+          isFoodStorage={false}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
         />
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginHorizontal: 15,
     marginTop: 15,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 3,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
-    textAlign: 'left',
+    textAlign: 'right',
   },
   statCard: {
     backgroundColor: 'white',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   modalButtons: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     width: '100%',
   },

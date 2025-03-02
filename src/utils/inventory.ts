@@ -48,12 +48,14 @@ export const createProduct = async (database: FirebaseDatabaseTypes.Module,
     productName: string, 
     isStatic: Boolean = false, 
     isQrable: Boolean = false, 
-    boxWeight: number = 0, 
+    boxWeight: number = 0,
+    isKgInTable: Boolean = false, // Add new parameter
     qrData: (qrDataType | {}) = {}) : Promise<string> => {
     const res = await attemptFirebasePush(database, `/inventory`, productName, {
         isStatic: isStatic,
         boxWeight: boxWeight,
         isQrable: isQrable,
+        isKgInTable: isKgInTable, // Add new field
         items: {},
         qrData: qrData
     }, REQUEST_LIMIT);

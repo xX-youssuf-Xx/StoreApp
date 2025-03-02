@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl} from 'react-native';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, BackHandler} from 'react-native';
 import TopNav from '../../src/components/TopNav';
 import React, {useEffect, useState} from 'react';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
@@ -21,6 +21,8 @@ import {productsReceiptQuery} from '../utils/types';
 import AddButton from '../components/AddButton';
 import CreateClient from '../components/CreateClient';
 import LogoutMenu from '../components/LogoutComponent';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 interface Client {
   id: string;
@@ -38,6 +40,9 @@ const ClientsScreen = () => {
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
   const getClients = async () => {
     try {
@@ -211,16 +216,86 @@ const ClientsScreen = () => {
     }
   };
 
+  const toggleSelection = (clientId: string) => {
+    const newSelection = new Set(selectedClients);
+    if (newSelection.has(clientId)) {
+      newSelection.delete(clientId);
+      if (newSelection.size === 0) {
+        setSelectionMode(false);
+      }
+    } else {
+      newSelection.add(clientId);
+    }
+    setSelectedClients(newSelection);
+  };
+
+  const cancelSelection = () => {
+    setSelectionMode(false);
+    setSelectedClients(new Set());
+  };
+
+  const deleteSelected = () => {
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      // Implement your delete logic here
+      console.log('Deleting clients:', Array.from(selectedClients));
+      setIsDeleteModalVisible(false);
+      cancelSelection();
+      // After successful deletion
+      await getClients(); // Refresh the list
+      showMessage({
+        message: 'تم الحذف بنجاح',
+        type: 'success',
+        duration: 3000,
+        floating: true,
+      });
+    } catch (error) {
+      showMessage({
+        message: 'حدث خطأ',
+        description: 'فشل في حذف العملاء',
+        type: 'danger',
+        duration: 3000,
+        floating: true,
+      });
+    }
+  };
+
+  const onLongPressClient = (clientId: string) => {
+    if (!selectionMode) {
+      setSelectionMode(true);
+    }
+    toggleSelection(clientId);
+  };
+
   useEffect(() => {
     getClients();
   }, []);
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectionMode) {
+        cancelSelection();
+        return true; // Prevents default back action
+      }
+      return false; // Allows default back action
+    });
+
+    return () => backHandler.remove();
+  }, [selectionMode]);
 
   const handleSettingsPress = () => {
     console.log('Settings pressed');
   };
 
   const handleBackPress = () => {
-    navigation.goBack();
+    if (selectionMode) {
+      cancelSelection();
+    } else {
+      navigation.goBack();
+    }
   };
 
   const onRefresh = React.useCallback(() => {
@@ -228,28 +303,57 @@ const ClientsScreen = () => {
     getClients().finally(() => setRefreshing(false));
   }, []);
 
-  const renderClientItem = ({item}: {item: Client}) => (
-    <TouchableOpacity
-      style={styles.clientItem}
-      onPress={() => {
-        navigation.navigate('ClientDetails', {client: item});
-      }}>
-      <View style={styles.clientInfo}>
-        <Text style={styles.clientReceipts}>الفواتير: {item.receiptsCount}</Text>
-        <Text style={styles.clientBalance}>الرصيد: {item.balance} ج.م</Text>
-      </View>
-      <View>
-        <Text style={styles.clientName}>{item.name}</Text>
-        <Text style={styles.clientNumber}>{item.number}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderClientItem = ({item}: {item: Client}) => {
+    const isSelected = selectedClients.has(item.id);
+
+    return (
+      <TouchableOpacity
+        style={styles.clientItem}
+        onPress={() => {
+          if (selectionMode) {
+            toggleSelection(item.id);
+          } else {
+            navigation.navigate('ClientDetails', {client: item});
+          }
+        }}
+        onLongPress={() => onLongPressClient(item.id)}>
+        <View style={styles.clientInfo}>
+          {selectionMode && (
+            <View style={styles.checkIconContainer}>
+              {isSelected && (
+                <View style={styles.checkIcon}>
+                  <Icon name="check" size={17} color="#fff" />
+                </View>
+              )}
+            </View>
+          )}
+          <Text style={styles.clientReceipts}>الفواتير: {item.receiptsCount}</Text>
+          <Text style={styles.clientBalance}>الرصيد: {item.balance} ج.م</Text>
+        </View>
+        <View>
+          <Text style={styles.clientName}>{item.name}</Text>
+          <Text style={styles.clientNumber}>{item.number}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <>
-         {isMenuOpen && (
-                <LogoutMenu
-          isFoodStorage={true}
+      {selectionMode && (
+        <View style={styles.selectionNavbar}>
+          <TouchableOpacity onPress={cancelSelection} style={styles.selectionNavButton}>
+            <Icon name="chevron-right" size={20} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.selectionCount}>تم اختيار {selectedClients.size}</Text>
+          <TouchableOpacity onPress={deleteSelected} style={styles.selectionNavButton}>
+            <Icon name="trash" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
+      )}
+      {isMenuOpen && (
+        <LogoutMenu
+          isFoodStorage={false}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
         />
@@ -257,8 +361,8 @@ const ClientsScreen = () => {
 
       <TopNav
         title="العملاء"
- onSettingsPress={() => {    setIsMenuOpen(!isMenuOpen);
-        }}        onSearchChange={handleSearchChange}
+        onSettingsPress={() => { setIsMenuOpen(!isMenuOpen); }}
+        onSearchChange={handleSearchChange}
         onBackPress={handleBackPress}
         showBackButton={false}
         showSearchIcon={true}
@@ -284,6 +388,15 @@ const ClientsScreen = () => {
           <CreateClient closeModal={closeModal} reloadClients={refresh} />
         )}
       </AddButton>
+      <ConfirmationModal
+        visible={isDeleteModalVisible}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        title="حذف العملاء"
+        message="لا يمكن التراجع عن هذا الإجراء"
+        itemType="clients"
+        count={selectedClients.size}
+      />
     </>
   );
 };
@@ -302,7 +415,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     elevation: 2,
@@ -315,13 +428,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    textAlign: 'left',
+    textAlign: 'right',
   },
   clientNumber: {
     fontSize: 14,
     color: '#666',
     marginTop: 5,
-    textAlign: 'left',
+    textAlign: 'right',
   },
   clientInfo: {
     alignItems: 'flex-start',
@@ -334,6 +447,49 @@ const styles = StyleSheet.create({
   clientReceipts: {
     fontSize: 14,
     color: '#2196F3',
+  },
+  selectionNavbar: {
+    height: 60,
+    backgroundColor: '#f8f8f8',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 99,
+  },
+  selectionCount: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: '500',
+    textAlign: 'right',
+  },
+  selectionNavButton: {
+    padding: 10,
+  },
+  checkIcon: {
+    backgroundColor: '#2196F3',
+    borderRadius: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    width: 23,
+    height: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkIconContainer: {
+    position: 'absolute',
+    top: -18,
+    right: -18,
+    zIndex: 5,
   },
 });
 

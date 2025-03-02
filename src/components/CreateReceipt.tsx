@@ -119,7 +119,10 @@ const CreateReceipt: React.FC<Props> = ({
       if (!db) throw new Error('Firebase database is not initialized');
       const fetchedProduct = await getProduct(db, product.name);
       if (fetchedProduct) {
-        if (!fetchedProduct.items || Object.keys(fetchedProduct.items).length === 0) {
+        if (
+          !fetchedProduct.items ||
+          Object.keys(fetchedProduct.items).length === 0
+        ) {
           Alert.alert('No Items', 'This product has no items available.');
           setProductItems([]);
           return;
@@ -150,7 +153,10 @@ const CreateReceipt: React.FC<Props> = ({
       }
     } catch (error) {
       console.error('Error fetching product details:', error);
-      Alert.alert('Error', 'Failed to fetch product details. Please try again.');
+      Alert.alert(
+        'Error',
+        'Failed to fetch product details. Please try again.',
+      );
     }
   };
 
@@ -183,76 +189,68 @@ const CreateReceipt: React.FC<Props> = ({
     }
   };
 
-  const handleUpdateItemWeight = (itemId: string, weight: string) => {
-    setSelectedItems(
-      selectedItems.map(item =>
-        item.id === itemId ? {...item, weight: parseFloat(weight) || 0} : item,
-      ),
-    );
-  };
-
   // Modify handleAddToReceipt function
-const handleAddToReceipt = () => {
-  if (!selectedProduct || selectedItems.length === 0 || !currentSellPrice) {
-    Alert.alert('Error', 'Please fill in all fields');
-    return;
-  }
-
-  // Sort selected items by their original order in productItems
-  const sortedSelectedItems = [...selectedItems].sort((a, b) => {
-    const itemA = productItems.find(item => item.id === a.id);
-    const itemB = productItems.find(item => item.id === b.id);
-    
-    if (!itemA || !itemB) return 0;
-    return (itemA.order || 0) - (itemB.order || 0);
-  });
-
-  const items: Record<string, number> = {};
-  sortedSelectedItems.forEach(item => {
-    if (item.weight > 0) {
-      items[item.id] = item.weight;
+  const handleAddToReceipt = () => {
+    if (!selectedProduct || selectedItems.length === 0 || !currentSellPrice) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
     }
-  });
 
-  const productKey = selectedProduct.name;
-  
-  // Calculate next Pnumber
-  const currentProducts = receipt.products || {};
-  const nextPnumber = Object.keys(currentProducts).length + 1;
+    // Sort selected items by their original order in productItems
+    const sortedSelectedItems = [...selectedItems].sort((a, b) => {
+      const itemA = productItems.find(item => item.id === a.id);
+      const itemB = productItems.find(item => item.id === b.id);
 
-  // Update productOrder state
-  setProductOrder(prev => {
-    const newOrder = prev.filter(key => key !== productKey);
-    return [...newOrder, productKey];
-  });
+      if (!itemA || !itemB) return 0;
+      return (itemA.order || 0) - (itemB.order || 0);
+    });
 
-  setReceipt({
-    ...receipt,
-    client: clientId,
-    products: {
-      ...receipt.products,
-      [productKey]: {
-        sellPrice: parseFloat(currentSellPrice),
-        items,
-        Pnumber: nextPnumber, // Add the Pnumber property
+    const items: Record<string, number> = {};
+    sortedSelectedItems.forEach(item => {
+      if (item.weight > 0) {
+        items[item.id] = item.weight;
+      }
+    });
+
+    const productKey = selectedProduct.name;
+
+    // Calculate next Pnumber
+    const currentProducts = receipt.products || {};
+    const nextPnumber = Object.keys(currentProducts).length + 1;
+
+    // Update productOrder state
+    setProductOrder(prev => {
+      const newOrder = prev.filter(key => key !== productKey);
+      return [...newOrder, productKey];
+    });
+
+    setReceipt({
+      ...receipt,
+      client: clientId,
+      products: {
+        ...receipt.products,
+        [productKey]: {
+          sellPrice: parseFloat(currentSellPrice),
+          items,
+          Pnumber: nextPnumber, // Add the Pnumber property
+        },
       },
-    },
-  });
+    });
 
-  resetModalState();
-  setSelectedProduct(null);
-  setIsAddModalVisible(false);
-};
+    resetModalState();
+    setSelectedProduct(null);
+    setIsAddModalVisible(false);
+  };
 
   const handleRemoveProduct = (productName: string) => {
     const updatedProducts = {...receipt.products};
     delete updatedProducts[productName];
-    
+
     // Reorder remaining products
     Object.values(updatedProducts).forEach((product, index) => {
       product.Pnumber = index + 1;
     });
-    
+
     setReceipt({...receipt, products: updatedProducts});
   };
 
@@ -288,15 +286,12 @@ const handleAddToReceipt = () => {
         });
       }
 
-      // const pdfPath = await generatePDF();
-      // if (!pdfPath) {
-      //   throw new Error('Failed to generate PDF');
-      // }
+      const finalMoneyPaid = moneyPaid === '' ? '0' : moneyPaid;
 
       await createReceiptHelper(
         db!,
         clientId,
-        parseFloat(moneyPaid),
+        parseFloat(finalMoneyPaid),
         'pdfPath',
         (bytesTransferred: number, totalBytes: number) => {
           console.log(`Uploaded ${bytesTransferred} of ${totalBytes} bytes`);
@@ -353,27 +348,6 @@ const handleAddToReceipt = () => {
         });
       }
     }
-  };
-
-  // Modify box count handler
-  const handleBoxCountChange = (itemId: string, boxCount: string) => {
-    const originalItem = productItems.find(i => i.id === itemId);
-    const product = filteredProducts.find(
-      p => p.name === originalItem?.productName,
-    );
-
-    // Convert boxes to weight
-    const weight = product ? parseInt(boxCount || '0') * product.boxWeight : 0;
-
-    setSelectedItems(prev =>
-      prev.map(item =>
-        item.id === itemId
-          ? {...item, weight, boxCount: parseInt(boxCount || '0')}
-          : item,
-      ),
-    );
-
-    setBoxCount(prev => ({...prev, [itemId]: boxCount}));
   };
 
   // Render functions
@@ -474,7 +448,7 @@ const handleAddToReceipt = () => {
                         selectedItems.find(i => i.id === item.id) &&
                           styles.selectedItemCard,
                       ]}
-                       onPress={() => handleItemSelect(item)}>
+                      onPress={() => handleItemSelect(item)}>
                       {/* <Text style={styles.itemName}>{item.displayName}</Text> */}
                       {selectedProduct.isStatic ? (
                         <>
@@ -523,13 +497,18 @@ const handleAddToReceipt = () => {
                               value={boxCount[item.id] || ''}
                               onChangeText={value => {
                                 const numBoxes = parseInt(value) || 0;
-                                setBoxCount(prev => ({...prev, [item.id]: value}));
+                                setBoxCount(prev => ({
+                                  ...prev,
+                                  [item.id]: value,
+                                }));
                                 setSelectedItems(prev =>
                                   prev.map(si =>
                                     si.id === item.id
                                       ? {
                                           ...si,
-                                          weight: numBoxes * (product?.boxWeight || 0),
+                                          weight:
+                                            numBoxes *
+                                            (product?.boxWeight || 0),
                                         }
                                       : si,
                                   ),
@@ -603,51 +582,51 @@ const handleAddToReceipt = () => {
         contentContainerStyle={styles.scrollViewContent}>
         <Text style={styles.headerText}>إنشاء فاتورة</Text>
 
+        {receipt.products &&
+          Object.entries(receipt.products)
+            .sort(([, a], [, b]) => a.Pnumber - b.Pnumber)
+            .map(([productKey, product]) => {
+              return (
+                <View key={productKey} style={styles.productCard}>
+                  <View style={styles.productHeader}>
+                    <Text style={styles.productName}>{productKey}</Text>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveProduct(productKey)}>
+                      <Text style={styles.removeButtonText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.productPrice}>
+                    سعر البيع: {product.sellPrice} ج.م/كجم
+                  </Text>
+                  <Text style={styles.productTotal}>
+                    الإجمالي: {calculateTotal(product)} ج.م
+                  </Text>
+                  <View style={styles.itemsList}>
+                    {Object.entries(product.items).map(
+                      ([itemId, weight], index) => (
+                        <Text key={itemId} style={styles.itemText}>
+                          القطعة {getArabicNumeral(index + 1)}: {weight} كجم
+                        </Text>
+                      ),
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+
         <TouchableOpacity
           style={styles.addProductButton}
           onPress={() => setIsAddModalVisible(true)}>
           <Text style={styles.addProductButtonText}>إضافة منتج</Text>
         </TouchableOpacity>
 
-        {receipt.products && 
-  Object.entries(receipt.products)
-    .sort(([, a], [, b]) => a.Pnumber - b.Pnumber)
-    .map(([productKey, product]) => {
-      return (
-        <View key={productKey} style={styles.productCard}>
-          <View style={styles.productHeader}>
-            <Text style={styles.productName}>{productKey}</Text>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => handleRemoveProduct(productKey)}>
-              <Text style={styles.removeButtonText}>×</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.productPrice}>
-            سعر البيع: {product.sellPrice} ج.م/كجم
-          </Text>
-          <Text style={styles.productTotal}>
-            الإجمالي: {calculateTotal(product)} ج.م
-          </Text>
-          <View style={styles.itemsList}>
-            {Object.entries(product.items).map(
-              ([itemId, weight], index) => (
-                <Text key={itemId} style={styles.itemText}>
-                  القطعة {getArabicNumeral(index + 1)}: {weight} كجم
-                </Text>
-              ),
-            )}
-          </View>
-        </View>
-      );
-    })}
-
         <TextInput
           style={styles.moneyInput}
           placeholder="0"
           keyboardType="decimal-pad"
           value={moneyPaid}
-          onChangeText={(text) => {
+          onChangeText={text => {
             // Allow negative sign, digits, and one decimal point
             if (/^-?\d*\.?\d*$/.test(text) || text === '-') {
               const numValue = text === '-' ? 0 : parseFloat(text);
@@ -846,7 +825,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 16,
-    
   },
   badge: {
     flexDirection: 'row',
@@ -1107,7 +1085,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: 14,
   },
-
 });
 
 export default CreateReceipt;
