@@ -1,13 +1,3 @@
-// First, let's define the Product interface properly
-interface Product {
-  name: string;  // Make name required
-  itemCount: number;
-  items?: Record<string, any>;
-  isStatic: boolean;
-  isQrable: boolean;
-  boxWeight: number;
-}
-
 import {
   View,
   Text,
@@ -29,6 +19,7 @@ import {showMessage} from 'react-native-flash-message';
 import {
   createItems,
   createProduct,
+  deleteProducts,
   getAllProducts,
   getProduct,
   getProductQrData,
@@ -50,6 +41,7 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import { cowLogoBase64 } from '../utils/imageAssets';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { Product } from '../utils/types';
 
 const FoodStorageScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -83,12 +75,13 @@ const FoodStorageScreen = () => {
               name,
               itemCount: validItemsCount, // Use the filtered count
               items: data.items,
+              status: data.status,
               isStatic: Boolean(data.isStatic),
               isQrable: Boolean(data.isQrable),
               boxWeight: Number(data.boxWeight) || 0,
             };
           }
-        );
+        ).filter(product => !product.status || product.status != 'deleted');
         
         // console.log('Formatted products with valid item counts:', formattedProducts);
         setProducts(formattedProducts);
@@ -121,112 +114,6 @@ const FoodStorageScreen = () => {
     }
   };
 
-  const getProductDetails = async (productName: string) => {
-    try {
-      const product = await getProduct(db!, productName);
-      if (product) {
-        console.log('Product details:', product);
-        return product;
-      }
-    } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'Error',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا',
-            type: 'danger',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
-    }
-    return null;
-  };
-
-  const newProduct = async (
-    productName: string,
-    isStatic: boolean = false,
-    isQrable: boolean = false,
-    boxWeight: number = 0,
-  ) => {
-    try {
-      const key = await createProduct(
-        db!,
-        productName,
-        isStatic,
-        isQrable,
-        boxWeight,
-      );
-      if (key) {
-        console.log('Product created with key:', key);
-        await getInventory();
-        return key;
-      }
-    } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'Error',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا',
-            type: 'danger',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else if (error.code === FIREBASE_CREATING_ERROR) {
-          showMessage({
-            message: 'Error',
-            description: 'Error creating product',
-            type: 'danger',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
-    }
-    return null;
-  };
-
-  const importItem = async (
-    productName: string,
-    boughtPrice: number,
-    weight: number,
-    qrString: string = '',
-  ) => {
-    try {
-      const key = await createItems(
-        db!,
-        productName,
-        boughtPrice,
-        weight,
-        qrString,
-      );
-      if (key) {
-        console.log('Item created with key:', key);
-        await getInventory();
-        return key;
-      }
-    } catch (error) {
-      if (error instanceof FirebaseError) {
-        handleFirebaseError(error);
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
-    }
-    return null;
-  };
-
   const handleFirebaseError = (error: FirebaseError) => {
     if (error.code === FIREBASE_ERROR) {
       showMessage({
@@ -249,40 +136,6 @@ const FoodStorageScreen = () => {
     }
   };
 
-  const qrToWeight = async (productName: string, qrVal: string) => {
-    try {
-      const qrData = await getProductQrData(db!, productName);
-      if (!qrData) {
-        showMessage({
-          message: 'Warning',
-          description: 'This product is not QR-enabled',
-          type: 'warning',
-          duration: 3000,
-          floating: true,
-          autoHide: true,
-        });
-        return null;
-      }
-      const intVal = qrVal.slice(
-        qrData.from - 1,
-        qrData.from - 1 + qrData.intLength,
-      );
-      const floatVal = qrVal.slice(
-        qrData.from + qrData.intLength,
-        qrData.from + qrData.intLength + qrData.floatLength,
-      );
-
-      return `${intVal}.${floatVal}`;
-    } catch (error) {
-      if (error instanceof FirebaseError) {
-        handleFirebaseError(error);
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
-      return null;
-    }
-  };
-
   useEffect(() => {
     getInventory();
   }, []);
@@ -301,7 +154,7 @@ const FoodStorageScreen = () => {
   const handleSearchChange = (text: string) => {
     setSearchText(text);
     const filtered = products.filter(product =>
-      product.name.toLowerCase().includes(text.toLowerCase())
+      product.name!.toLowerCase().includes(text.toLowerCase())
     );
     setFilteredProducts(filtered);
   };
@@ -345,6 +198,7 @@ const FoodStorageScreen = () => {
     try {
       // Add your delete logic here
       console.log('Deleting products:', Array.from(selectedProducts));
+      await deleteProducts(db!, Array.from(selectedProducts));
       setIsDeleteModalVisible(false);
       cancelSelection();
       await getInventory(); // Refresh the list
@@ -373,19 +227,19 @@ const FoodStorageScreen = () => {
   };
 
   const renderProductItem = ({item}: {item: Product}) => {
-    const isSelected = selectedProducts.has(item.name);
+    const isSelected = selectedProducts.has(item.name!);
 
     return (
       <TouchableOpacity
         style={styles.productItem}
         onPress={() => {
           if (selectionMode) {
-            toggleSelection(item.name);
+            toggleSelection(item.name!);
           } else {
             navigation.navigate('ProductDetails', {product: item});
           }
         }}
-        onLongPress={() => onLongPressProduct(item.name)}>
+        onLongPress={() => onLongPressProduct(item.name!)}>
         <View style={styles.productInfo}>
           {selectionMode && (
             <View style={styles.checkIconContainer}>
@@ -402,7 +256,7 @@ const FoodStorageScreen = () => {
           </Text>
         </View>
         <View>
-          <Text style={styles.productName}>{item.name}</Text>
+          <Text style={styles.productName}>{item.name!}</Text>
           <Text style={styles.productAttributes}>
             {item.isStatic ? 'ثابت' : 'متغير'} | {item.isQrable ? 'QR' : 'غير QR'}
           </Text>
@@ -582,7 +436,7 @@ const FoodStorageScreen = () => {
   
                       return `
                         <tr>
-                          <td class="product-name">${product.name}</td>
+                          <td class="product-name">${product.name!}</td>
                           <td>${remainingWeight.toFixed(2)} ${unit}</td>
                           <td>${avgPrice.toFixed(2)} ج.م</td>
                         </tr>
@@ -655,7 +509,7 @@ const FoodStorageScreen = () => {
           <FlatList
             data={filteredProducts}
             renderItem={renderProductItem}
-            keyExtractor={(item) => item.name}
+            keyExtractor={(item) => item.name!}
             contentContainerStyle={styles.listContainer}
             ListEmptyComponent={renderEmptyList}
             refreshControl={

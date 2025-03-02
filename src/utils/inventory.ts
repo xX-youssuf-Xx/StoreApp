@@ -1,5 +1,5 @@
 import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
-import { attemptFirebaseGet, attemptFirebasePush } from "./firebase";
+import { attemptFirebaseGet, attemptFirebasePush, attemptFirebaseUpdate } from "./firebase";
 import { FIREBASE_CREATING_ERROR, FIREBASE_ERROR, REQUEST_LIMIT } from "../config/Constants";
 import { FirebaseError } from "../errors/FirebaseError";
 import { Item, Product, ProuctsType, qrDataType } from "./types";
@@ -100,4 +100,22 @@ export const createItems = async (database: FirebaseDatabaseTypes.Module,
     }
 
     return res;
+}
+
+export const deleteProducts = async (database: FirebaseDatabaseTypes.Module, productsNames: string[]) => {
+  await Promise.allSettled(productsNames.map(async (productName) => {
+    const res = await attemptFirebaseUpdate(database, `/inventory/${productName}`, 'status', 'deleted', REQUEST_LIMIT);
+    if (res === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+  }))
+}
+
+export const deleteItems = async (database: FirebaseDatabaseTypes.Module, productName: string, itemsUuids: string[]) => {
+  await Promise.allSettled(itemsUuids.map(async (itemUuid) => {
+    const res = await attemptFirebaseUpdate(database, `/inventory/${productName}/items/${itemUuid}`, 'status', 'deleted', REQUEST_LIMIT);
+    if (res === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+  }))
 }

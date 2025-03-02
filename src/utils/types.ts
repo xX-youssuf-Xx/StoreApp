@@ -3,12 +3,14 @@ export type User = {
 }
 
 export type Item = {
-    boughtqAt: string, 
+    boughtAt: string, 
     boughtPrice: number, 
     totalWeight: number,
     weight: number,
     order: number,
-    importedAt: string
+    importedAt: string,
+    qrString?: string,
+    status?: 'deleted'
 }
 
 export type qrDataType = {
@@ -22,10 +24,11 @@ export type Product = {
     boxWeight: number, 
     isQrable: Boolean, 
     isStatic: Boolean,
-    isKgInTable: Boolean, // Add this new property
+    isKgInTable?: Boolean, // Add this new property
     items: Item[],
     qrData?: qrDataType,
-    itemCount?:  number
+    itemCount?:  number,
+    status?: 'deleted'
 }
 
 export type ProuctsType = {
@@ -36,7 +39,8 @@ export type Client = {
     receipts: {}
     name: string, 
     number: string,
-    balance: number
+    balance: number,
+    status?: 'deleted'
 }
 
 export type ClientsType = {

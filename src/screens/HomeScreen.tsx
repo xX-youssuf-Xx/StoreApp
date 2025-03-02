@@ -13,7 +13,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
 import TopNav from '../../src/components/TopNav';
 import LogoutMenu from '../components/LogoutComponent';
-import { getTodayProfit, getTodayIncome } from '../utils/stats';
+import { getTodayProfit, getTodayIncome, getTodaySales } from '../utils/stats';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
@@ -35,7 +35,7 @@ const HomeScreen = () => {
   
   // Stats states
   const [todayProfit, setTodayProfit] = useState(0);
-  const [todayIncome, setTodayIncome] = useState(0);
+  const [todaySales, setTodaySales] = useState(0);
   const [searchText, setSearchText] = useState('');
 
   const getTodayStats = async () => {
@@ -47,9 +47,9 @@ const HomeScreen = () => {
       }
 
       // Fetch today's income
-      const income = await getTodayIncome(db!);
-      if (income !== null && income !== undefined) {
-        setTodayIncome(Math.floor(Number(income)));
+      const sales = await getTodaySales(db!);
+      if (sales !== null && sales !== undefined) {
+        setTodaySales(Math.floor(Number(sales)));
       }
     } catch (error) {
       handleError(error);
@@ -174,7 +174,7 @@ const HomeScreen = () => {
           <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
           <View style={styles.statsRow}>
             <StatCard title="الربح" value={todayProfit} />
-            <StatCard title="الدخل" value={todayIncome} />
+            <StatCard title="المبيعات" value={todaySales} />
           </View>
         </View>
 

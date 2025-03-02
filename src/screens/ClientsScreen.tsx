@@ -4,6 +4,7 @@ import React, {useEffect, useState} from 'react';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {
   createClient,
+  deleteClients,
   getAllClients,
   getClient,
   getClientReceiptsHelper,
@@ -51,10 +52,11 @@ const ClientsScreen = () => {
         const formattedClients = Object.entries(clients).map(([id, data]) => ({
           id,
           name: data.name,
+          status: data.status,
           number: data.number,
           balance: data.balance,
           receiptsCount: Object.keys(data.receipts || {}).length,
-        }));
+        })).filter(client => !client.status || client.status != 'deleted');
         setClients(formattedClients);
         setFilteredClients(formattedClients);
         console.log('clients : ' , formattedClients);
@@ -242,6 +244,7 @@ const ClientsScreen = () => {
     try {
       // Implement your delete logic here
       console.log('Deleting clients:', Array.from(selectedClients));
+      await deleteClients(db!, Array.from(selectedClients));
       setIsDeleteModalVisible(false);
       cancelSelection();
       // After successful deletion
