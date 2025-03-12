@@ -68,7 +68,7 @@ const StorageDetailsScreen = () => {
         const summary = formattedProducts
           .map(product => {
             const validItems = Object.values(product.items || {}).filter(
-              (item: any) => item && item.weight > 0
+              (item: any) => item && item.weight > 0 && (!item.status || item.status != 'deleted') 
             );
 
             if (validItems.length > 0) {

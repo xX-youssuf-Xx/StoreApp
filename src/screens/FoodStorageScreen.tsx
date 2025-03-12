@@ -68,7 +68,7 @@ const FoodStorageScreen = () => {
           ([name, data]): Product => {
             // Count only items with weight > 0
             const validItemsCount = Object.values(data.items || {}).filter(
-              (item: any) => item && item.weight > 0
+              (item: any) => item && item.weight > 0 && (!item.status || item.status != 'deleted')
             ).length;
 
             return {
