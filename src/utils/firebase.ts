@@ -30,7 +30,10 @@ export const attemptFirebaseGet = async (
     times: number
 ): Promise<FirebaseDatabaseTypes.DataSnapshot | typeof FIREBASE_ERROR> => {
     try {
-        const snapShot = await database.ref(ref).once('value');
+        // Add options to always fetch from server
+        const snapShot = await database.ref(ref).once('value', undefined, {
+            serverSideTimestamp: true
+        });
         return snapShot; 
     } catch (e) {
         console.log("Error getting item", e);
