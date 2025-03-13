@@ -61,3 +61,12 @@ export const getClientReceiptsHelper = async (database: FirebaseDatabaseTypes.Mo
     };
     return receipts;
 }
+
+export const deleteClients = async (database: FirebaseDatabaseTypes.Module, clientsUuids: string[]) => {
+  await Promise.allSettled(clientsUuids.map(async (clientUuid) => {
+    const res = await attemptFirebaseUpdate(database, `/clients/${clientUuid}`, 'status', 'deleted', REQUEST_LIMIT);
+    if (res === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+  }))
+}

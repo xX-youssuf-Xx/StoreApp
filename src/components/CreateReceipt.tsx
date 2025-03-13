@@ -17,7 +17,7 @@ import {createReceiptHelper} from '../utils/receipts';
 import {showMessage} from 'react-native-flash-message';
 import {formatDate} from '../utils/dateFormatter';
 import {Picker} from '@react-native-picker/picker';
-import {ReceiptProduct} from '../utils/types';
+import {Item, Product, ReceiptProduct} from '../utils/types';
 import QrReader from './QrReader';
 
 interface Props {
@@ -25,15 +25,6 @@ interface Props {
   clientName: String | null;
   onClose: () => void;
   refresh: () => void;
-}
-
-interface Product {
-  name: string;
-  itemCount: number;
-  items: Record<string, any>;
-  isStatic: boolean;
-  isQrable: boolean;
-  boxWeight: number;
 }
 
 interface SelectedItem {
@@ -67,7 +58,7 @@ const CreateReceipt: React.FC<Props> = ({
   const [productOrder, setProductOrder] = useState<string[]>([]);
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    product.name!.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   useEffect(() => {
@@ -82,15 +73,16 @@ const CreateReceipt: React.FC<Props> = ({
       const fetchedProducts = await getAllProducts(db);
       if (fetchedProducts) {
         const formattedProducts = Object.entries(fetchedProducts).map(
-          ([name, data]: [string, any]) => ({
+          ([name, data]: [string, Product]) => ({
             name,
             itemCount: Object.keys(data.items || {}).length,
             items: data.items,
+            status: data.status,
             isStatic: data.isStatic,
             isQrable: data.isQrable,
             boxWeight: data.boxWeight,
           }),
-        );
+        ).filter(product => !product.status || product.status != 'deleted');
         setProducts(formattedProducts);
       }
     } catch (error) {
@@ -117,7 +109,7 @@ const CreateReceipt: React.FC<Props> = ({
     setSelectedProduct(product);
     try {
       if (!db) throw new Error('Firebase database is not initialized');
-      const fetchedProduct = await getProduct(db, product.name);
+      const fetchedProduct = await getProduct(db, product.name!);
       if (fetchedProduct) {
         if (
           !fetchedProduct.items ||
@@ -129,12 +121,12 @@ const CreateReceipt: React.FC<Props> = ({
         }
 
         const formattedItems = Object.entries(fetchedProduct.items)
-          .map(([id, item]: [string, any], index) => ({
+          .map(([id, item]: [string, Item], index) => ({
             id,
             ...item,
             displayName: `القطعة ${getArabicNumeral(index + 1)}`,
           }))
-          .filter(item => item.weight > 0);
+          .filter(item => item.weight > 0 && (!item.status || item.status != 'deleted'));
 
         // Sort items by order property
         const sortedItems = formattedItems.sort((a, b) => {
@@ -212,7 +204,7 @@ const CreateReceipt: React.FC<Props> = ({
       }
     });
 
-    const productKey = selectedProduct.name;
+    const productKey = selectedProduct.name!;
 
     // Calculate next Pnumber
     const currentProducts = receipt.products || {};
@@ -380,11 +372,11 @@ const CreateReceipt: React.FC<Props> = ({
               keyboardShouldPersistTaps="handled">
               {filteredProducts.map(product => (
                 <TouchableOpacity
-                  key={product.name}
+                  key={product.name!}
                   style={styles.dropdownItem}
                   onPress={() => {
-                    handleProductSelect(product.name);
-                    setSearchQuery(product.name);
+                    handleProductSelect(product.name!);
+                    setSearchQuery(product.name!);
                     setIsDropdownVisible(false);
                   }}>
                   <Text style={styles.dropdownItemText}>{product.name}</Text>

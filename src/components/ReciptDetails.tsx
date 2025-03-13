@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import {Receipt, ReceiptProduct} from '../utils/types';
+import {Item, Receipt, ReceiptProduct} from '../utils/types';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import FileViewer from 'react-native-file-viewer';
 import {getProduct} from '../utils/inventory';
@@ -32,17 +32,8 @@ interface ReceiptDetailsProps {
   clientName: String | null;
 }
 
-interface ItemDetail {
-  order: number;
-  weight: number;
-  totalWeight: number;
-  importedAt: string;
-  qrString: string;
-  boughtPrice: number;
-}
-
 interface ProductDetail {
-  items: Record<string, ItemDetail>;
+  items: Record<string, Item>;
   isStatic: boolean;
   isQrable: boolean;
   boxWeight: number;
@@ -326,17 +317,19 @@ const handleGenerateImage = async () => {
           // Convert Product to ProductDetail format
           details[productName] = {
             items: Object.fromEntries(
-              Object.entries(productDetail.items || {}).map(([id, item]) => [
+              Object.entries(productDetail.items || {}).map(([id, item]) : [string, Item] => [
                 id,
                 {
                   order: item.order,
                   weight: item.weight,
+                  status: item.status,
                   totalWeight: item.totalWeight,
                   importedAt: item.importedAt,
                   qrString: '',
                   boughtPrice: item.boughtPrice,
+                  boughtAt: item.boughtAt
                 },
-              ]),
+              ]).filter(item => !item[1].status || item[1].status == 'deleted'),
             ),
             isStatic: !!productDetail.isStatic,
             isQrable: !!productDetail.isQrable,

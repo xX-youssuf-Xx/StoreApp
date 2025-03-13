@@ -37,11 +37,11 @@ const ProfileScreen = () => {
   const [allProfit, setAllProfit] = useState(0);
 
   // Income states
-  const [todayIncome, setTodayIncome] = useState(0);
-  const [weekIncome, setWeekIncome] = useState(0);
-  const [monthIncome, setMonthIncome] = useState(0);
-  const [lastMonthIncome, setLastMonthIncome] = useState(0);
-  const [allIncome, setAllIncome] = useState(0);
+  // const [todayIncome, setTodayIncome] = useState(0);
+  // const [weekIncome, setWeekIncome] = useState(0);
+  // const [monthIncome, setMonthIncome] = useState(0);
+  // const [lastMonthIncome, setLastMonthIncome] = useState(0);
+  // const [allIncome, setAllIncome] = useState(0);
 
 
   // Sales states
@@ -105,32 +105,32 @@ const ProfileScreen = () => {
       }
 
       // Fetch income statistics
-      const todayInc = await getTodayIncome(db!);
-      if (todayInc !== null && todayInc !== undefined) {
-        setTodayIncome(Math.floor(Number(todayInc)));
-      }
+      // const todayInc = await getTodayIncome(db!);
+      // if (todayInc !== null && todayInc !== undefined) {
+      //   setTodayIncome(Math.floor(Number(todayInc)));
+      // }
 
-      const weekInc = await getWeekIncome(db!);
-      if (weekInc !== null && weekInc !== undefined) {
-        setWeekIncome(Math.floor(Number(weekInc)));
-      }
+      // const weekInc = await getWeekIncome(db!);
+      // if (weekInc !== null && weekInc !== undefined) {
+      //   setWeekIncome(Math.floor(Number(weekInc)));
+      // }
 
-      const monthInc = await getMonthIncome(db!);
-      if (monthInc !== null && monthInc !== undefined) {
-        setMonthIncome(Math.floor(Number(monthInc)));
-      }
+      // const monthInc = await getMonthIncome(db!);
+      // if (monthInc !== null && monthInc !== undefined) {
+      //   setMonthIncome(Math.floor(Number(monthInc)));
+      // }
 
-      const lastMonthInc = await getLastMonthIncome(db!);
-      if (lastMonthInc !== null && lastMonthInc !== undefined) {
-        setLastMonthIncome(Math.floor(Number(lastMonthInc)));
-      }
+      // const lastMonthInc = await getLastMonthIncome(db!);
+      // if (lastMonthInc !== null && lastMonthInc !== undefined) {
+      //   setLastMonthIncome(Math.floor(Number(lastMonthInc)));
+      // }
 
-      const allInc = await getAllIncome(db!);
-      if (allInc !== null && allInc !== undefined) {
-        setAllIncome(Math.floor(Number(allInc)));
-      }
+      // const allInc = await getAllIncome(db!);
+      // if (allInc !== null && allInc !== undefined) {
+      //   setAllIncome(Math.floor(Number(allInc)));
+      // }
 
-      
+    
 
       // Fetch sales statistics
       const todaySales = await getTodaySales(db!);
@@ -252,13 +252,13 @@ const ProfileScreen = () => {
       <ScrollView style={styles.container}>
         {/* Balance Section */}
         <View style={styles.topContainer}>
-          <TouchableOpacity style={styles.balanceCard} onPress={() => setModalVisible(true)}>
+          {/* <TouchableOpacity style={styles.balanceCard} onPress={() => setModalVisible(true)}>
             <View style={styles.balanceContent}>
               <Text style={styles.balanceTitle}>الرصيد الحالي</Text>
               <Text style={styles.balanceValue}>{Math.floor(balance)} ج.م</Text>
             </View>
             <MaterialIcons name="edit" size={24} color="#4CAF50" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View style={styles.balanceCard}>
             <View style={styles.balanceContent}>
@@ -279,7 +279,7 @@ const ProfileScreen = () => {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
           <StatCard title="الربح" value={todayProfit} />
-          <StatCard title="الدخل" value={todayIncome} />
+          {/* <StatCard title="الدخل" value={todayIncome} /> */}
           <StatCard title="المبيعات" value={todaySales} />
         </View>
 
@@ -287,7 +287,7 @@ const ProfileScreen = () => {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
           <StatCard title="الربح" value={weekProfit} />
-          <StatCard title="الدخل" value={weekIncome} />
+          {/* <StatCard title="الدخل" value={weekIncome} /> */}
           <StatCard title="المبيعات" value={weekSales} />
         </View>
 
@@ -295,7 +295,7 @@ const ProfileScreen = () => {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
           <StatCard title="الربح" value={monthProfit} />
-          <StatCard title="الدخل" value={monthIncome} />
+          {/* <StatCard title="الدخل" value={monthIncome} /> */}
           <StatCard title="المبيعات" value={monthSales} />
         </View>
 
@@ -303,7 +303,7 @@ const ProfileScreen = () => {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
           <StatCard title="الربح" value={lastMonthProfit} />
-          <StatCard title="الدخل" value={lastMonthIncome} />
+          {/* <StatCard title="الدخل" value={lastMonthIncome} /> */}
           <StatCard title="المبيعات" value={lastMonthSales} />
         </View>
 
@@ -311,7 +311,7 @@ const ProfileScreen = () => {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
           <StatCard title="إجمالي الربح" value={allProfit} />
-          <StatCard title="إجمالي الدخل" value={allIncome} />
+          {/* <StatCard title="إجمالي الدخل" value={allIncome} /> */}
           <StatCard title="إجمالي المبيعات" value={allSales} />
         </View>
       </ScrollView>

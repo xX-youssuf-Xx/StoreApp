@@ -19,16 +19,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import FileViewer from 'react-native-file-viewer';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import { cowLogoBase64 } from '../utils/imageAssets';
-
-// Define the Product interface based on the provided code
-interface Product {
-  name: string;
-  itemCount: number;
-  items?: Record<string, any>;
-  isStatic: boolean;
-  isQrable: boolean;
-  boxWeight: number;
-}
+import { Product } from '../utils/types';
 
 interface ProductSummary {
   name: string;
@@ -63,12 +54,13 @@ const StorageDetailsScreen = () => {
               name,
               itemCount: validItemsCount,
               items: data.items,
+              status: data.status,
               isStatic: Boolean(data.isStatic),
               isQrable: Boolean(data.isQrable),
               boxWeight: Number(data.boxWeight) || 0,
             };
           }
-        );
+        ).filter(product => !product.status || product.status != 'deleted');
         
         setProducts(formattedProducts);
         
@@ -76,7 +68,7 @@ const StorageDetailsScreen = () => {
         const summary = formattedProducts
           .map(product => {
             const validItems = Object.values(product.items || {}).filter(
-              (item: any) => item && item.weight > 0
+              (item: any) => item && item.weight > 0 && (!item.status || item.status != 'deleted') 
             );
 
             if (validItems.length > 0) {

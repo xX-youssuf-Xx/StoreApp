@@ -6,7 +6,7 @@ import {useFirebase} from '../context/FirebaseContext';
 import {FirebaseError} from '../errors/FirebaseError';
 import {FIREBASE_ERROR} from '../config/Constants';
 import {showMessage} from 'react-native-flash-message';
-import {getProduct} from '../utils/inventory';
+import {deleteItems, getProduct} from '../utils/inventory';
 import {Product, Item} from '../utils/types';
 import AddButton from '../components/AddButton';
 import CreateItem from '../components/CreateItem';
@@ -94,7 +94,7 @@ const ProductDetailsScreen = () => {
             };
           })
           .filter(item => {
-            const isValid = item && item.weight > 0;
+            const isValid = item && item.weight > 0 && (!item.status || item.status != 'deleted');
             if (!isValid) {
               console.log('Filtering out invalid item:', item);
             }
@@ -192,6 +192,7 @@ const ProductDetailsScreen = () => {
     try {
       // Add your delete logic here
       console.log('Deleting items:', Array.from(selectedItems));
+      await deleteItems(db!, product.name, Array.from(selectedItems));
       setIsDeleteModalVisible(false);
       cancelSelection();
       // Refresh the list
