@@ -24,7 +24,7 @@ import Svg, { Path, Polyline, Line } from 'react-native-svg';
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
-  const { db, setShouldOnline } = useFirebase();
+  const { db } = useFirebase();
 
   // Menu state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -78,7 +78,6 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    setShouldOnline(false);
     getTodayStats();
   }, []);
 

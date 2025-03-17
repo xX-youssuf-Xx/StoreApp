@@ -130,7 +130,7 @@ const ProfileScreen = () => {
       //   setAllIncome(Math.floor(Number(allInc)));
       // }
 
-    
+
 
       // Fetch sales statistics
       const todaySales = await getTodaySales(db!);
@@ -232,7 +232,7 @@ const ProfileScreen = () => {
   return (
     <>
       {isMenuOpen && (
-                <LogoutMenu
+        <LogoutMenu
           isFoodStorage={false}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
