@@ -80,9 +80,66 @@ const handleGenerateImage = async () => {
       throw new Error('Failed to fetch product details');
     }
 
-    // Generate HTML content
+    // Add image-specific styles to the HTML content
+    const imageSpecificStyles = `
+      <style class="image-only-styles">
+        body {
+          transform: scale(0.7);
+          transform-origin: top left;
+        }
+        .container {
+          width: 550px !important;
+          margin: 0 !important;
+          padding: 10px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 600px !important; /* Set minimum height */
+        }
+        .products-table {
+          width: 100% !important;
+          font-size: 10px !important;
+          margin: 10px 0 !important;
+        }
+        .products-table th,
+        .products-table td {
+          padding: 4px !important;
+          font-size: 10px !important;
+        }
+        .weights-section {
+          width: 100% !important;
+          margin-top: auto !important; /* Push to bottom */
+          margin-bottom: 20px !important;
+          position: relative !important;
+          bottom: 0 !important;
+        }
+        .weights-table {
+          width: 95% !important;
+          margin: 10px auto !important;
+          font-size: 10px !important;
+          page-break-inside: avoid !important;
+        }
+        .weight-cell {
+          font-size: 10px !important;
+          padding: 2px !important;
+        }
+        .product-header {
+          font-size: 10px !important;
+          padding: 2px !important;
+        }
+        .total-weight {
+          font-size: 10px !important;
+          padding: 2px !important;
+        }
+        .summary-container {
+          margin: 10px auto !important;
+        }
+      </style>
+    `;
+
+    // Generate HTML content with additional styles
     const html = generateDetailedReceiptHTML(details);
-    setHtmlContent(html);
+    const htmlWithImageStyles = html.replace('</head>', `${imageSpecificStyles}</head>`);
+    setHtmlContent(htmlWithImageStyles);
 
     // Wait for content to render
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -91,21 +148,17 @@ const handleGenerateImage = async () => {
       throw new Error('Content reference not found');
     }
 
-    // Capture the content
+    // Rest of your existing code...
     const uri = await captureRef(contentRef, {
       format: 'jpg',
       quality: 0.9,
       result: 'base64'
-    });
+    }); 
 
-    // Save and open the image
     const fileName = `Receipt_${receipt?.Rnumber || 'unknown'}_${Date.now()}.jpg`;
     const filePath = `${Platform.OS === 'android' ? 'file://' : ''}${RNFS.DocumentDirectoryPath}/${fileName}`;
 
-    // Save the image
     await RNFS.writeFile(filePath, uri, 'base64');
-
-    // Open the image
     await FileViewer.open(filePath, {
       showOpenWithDialog: true,
     });
@@ -1147,11 +1200,18 @@ const handleGenerateImage = async () => {
   />
 </View>
 <View style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0 }}>
-  <View ref={contentRef} style={{ width: 800, backgroundColor: 'white', padding: 20 }}>
+  <View ref={contentRef} style={{ 
+    width: 400 , // Reduced from 800
+    backgroundColor: 'white', 
+    padding: 10, // Reduced padding 
+  }}>
     <WebView
       originWhitelist={['*']}
       source={{ html: htmlContent }}
-      style={{ width: 800, height: 1200 }}
+      style={{ 
+        width: 400, // Reduced from 800
+        height: 600 , // Reduced from 1200
+      }}
       scrollEnabled={false}
       onLoad={() => setIsWebViewReady(true)}
       javaScriptEnabled={true}
