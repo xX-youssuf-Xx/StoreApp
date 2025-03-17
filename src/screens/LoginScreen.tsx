@@ -25,11 +25,7 @@ const { width, height } = Dimensions.get('window');
 const LoginScreen = () => {
   const [name, setName] = useState("");
   const navigation = useNavigation<NavigationProp<any>>();
-  const { db, setShouldOnline } = useFirebase();
-
-  useEffect(() => {
-    setShouldOnline(true);
-  }, []);
+  const { db } = useFirebase();
 
   const handleNameChange = (text: string) => {
     setName(text);

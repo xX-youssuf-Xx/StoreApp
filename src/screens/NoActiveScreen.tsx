@@ -21,20 +21,17 @@ const { width, height } = Dimensions.get('window');
 
 const NoActiveScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
-  const { db, setShouldOnline } = useFirebase();
+  const { db } = useFirebase();
 
   const handleRetry = async () => {
     try {
-      setShouldOnline(true);
       const name = await getItem('name');
       console.log('Retrieved name from storage:', name);
       if (!name) {
         // JOE: transferr to login page
         navigation.navigate('Login');
-
         return;
       }
-
 
       const activeUser = await getActiveUser(db!);
 

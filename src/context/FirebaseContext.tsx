@@ -24,7 +24,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase if not already initialized
-let app : any;
+let app: any;
 try {
   app = firebase.app();
 } catch (error) {
@@ -34,7 +34,6 @@ try {
 interface FirebaseContextType {
   db: FirebaseDatabaseTypes.Module | null;
   backup: () => Promise<Boolean>;
-  setShouldOnline: Dispatch<SetStateAction<Boolean>>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | null>(null);
@@ -45,8 +44,6 @@ interface FirebaseProviderProps {
 
 export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [db, setDb] = useState<FirebaseDatabaseTypes.Module | null>(null);
-  const [shouldOnline, setShouldOnline] = useState<Boolean>(false);
-  const [online, setOnline] = useState<Boolean>(true);
   const netInfo = useNetInfo();
 
   // Use the initialized app
@@ -67,14 +64,9 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
 
   const backup = async () => {
     try {
-      setShouldOnline(true);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      if (online) {
-        await deleteItem('active');
-        await emptyActiveUser(database);
-        return true;
-      }
-      return false;
+      await deleteItem('active');
+      await emptyActiveUser(database);
+      return true;
     } catch (e) {
       console.log('ERROR');
       console.log(e);
@@ -98,9 +90,9 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   }
 
   return (
-    <FirebaseContext.Provider value={{ db, backup, setShouldOnline }}>
+    <FirebaseContext.Provider value={{ db, backup }}>
       {children}
-      {shouldOnline && !netInfo.isConnected ? (
+      {!netInfo.isConnected && (
         <View style={{
           position: 'absolute',
           top: 0,
@@ -112,11 +104,11 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
           alignItems: 'center',
           zIndex: 9999
         }}>
-          <MaterialIcons 
-            name="warning" 
-            size={80} 
+          <MaterialIcons
+            name="warning"
+            size={80}
             color="#FFD700"
-            style={{marginBottom: 20}}
+            style={{ marginBottom: 20 }}
           />
           <Text style={{
             color: 'white',
@@ -136,7 +128,7 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
             Please check your internet connection and try again
           </Text>
         </View>
-      ) : null}
+      )}
     </FirebaseContext.Provider>
   );
 };
