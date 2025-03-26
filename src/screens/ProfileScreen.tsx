@@ -1,10 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
 import {
   getAllProfit, getLastMonthProfit, getMonthProfit, getTodayProfit, getWeekProfit,
-  getAllIncome, getLastMonthIncome, getMonthIncome, getTodayIncome, getWeekIncome,
   getTodaySales,
   getWeekSales,
   getMonthSales,
@@ -14,10 +14,15 @@ import {
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
 import { showMessage } from 'react-native-flash-message';
-import { updateAdminBalance, getAdminBalance, getPendingAdminBalance, getInventoryTotalPrice } from '../utils/auth';
 import TopNav from '../../src/components/TopNav';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LogoutMenu from '../components/LogoutComponent';
+import { getPendingAdminBalance, getInventoryTotalPrice } from '../utils/auth';
+const StatCard = ({ title, value }: { title: string; value: number }) => (
+  <View style={styles.statCard}>
+    <Text style={styles.statTitle}>{title}</Text>
+    <Text style={styles.statValue}>{value} ج.م</Text>
+  </View>
+);
 
 const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -25,7 +30,6 @@ const ProfileScreen = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Balance state
-  const [balance, setBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [inventoryTotalPrice, setInventoryTotalPrice] = useState(0);
 
@@ -36,14 +40,6 @@ const ProfileScreen = () => {
   const [lastMonthProfit, setLastMonthProfit] = useState(0);
   const [allProfit, setAllProfit] = useState(0);
 
-  // Income states
-  // const [todayIncome, setTodayIncome] = useState(0);
-  // const [weekIncome, setWeekIncome] = useState(0);
-  // const [monthIncome, setMonthIncome] = useState(0);
-  // const [lastMonthIncome, setLastMonthIncome] = useState(0);
-  // const [allIncome, setAllIncome] = useState(0);
-
-
   // Sales states
   const [todaySales, setTodaySales] = useState(0);
   const [weekSales, setWeekSales] = useState(0);
@@ -51,17 +47,8 @@ const ProfileScreen = () => {
   const [lastMonthSales, setLastMonthSales] = useState(0);
   const [allSales, setAllSales] = useState(0);
 
-  // Modal states
-  const [modalVisible, setModalVisible] = useState(false);
-  const [balanceChange, setBalanceChange] = useState('');
-
   const getBalance = async () => {
     try {
-      const currentBalance = await getAdminBalance(db!);
-      if (currentBalance !== null && currentBalance !== undefined) {
-        setBalance(Number(currentBalance));
-      }
-
       const currentPendingBalance = await getPendingAdminBalance(db!);
       if (currentPendingBalance !== null && currentPendingBalance !== undefined) {
         setPendingBalance(Number(currentPendingBalance));
@@ -79,117 +66,55 @@ const ProfileScreen = () => {
   const getStats = async () => {
     try {
       // Fetch profit statistics
-      const today = await getTodayProfit(db!);
-      if (today !== null && today !== undefined) {
-        setTodayProfit(Math.floor(Number(today)));
+      const _todayProfit = await getTodayProfit(db!);
+      if (_todayProfit !== null && _todayProfit !== undefined) {
+        setTodayProfit(Math.floor(Number(_todayProfit)));
       }
 
-      const week = await getWeekProfit(db!);
-      if (week !== null && week !== undefined) {
-        setWeekProfit(Math.floor(Number(week)));
+      const _weekProfit = await getWeekProfit(db!);
+      if (_weekProfit !== null && _weekProfit !== undefined) {
+        setWeekProfit(Math.floor(Number(_weekProfit)));
       }
 
-      const month = await getMonthProfit(db!);
-      if (month !== null && month !== undefined) {
-        setMonthProfit(Math.floor(Number(month)));
+      const _monthProfit = await getMonthProfit(db!);
+      if (_monthProfit !== null && _monthProfit !== undefined) {
+        setMonthProfit(Math.floor(Number(_monthProfit)));
       }
 
-      const lastMonth = await getLastMonthProfit(db!);
-      if (lastMonth !== null && lastMonth !== undefined) {
-        setLastMonthProfit(Math.floor(Number(lastMonth)));
+      const _lastMonthProfit = await getLastMonthProfit(db!);
+      if (_lastMonthProfit !== null && _lastMonthProfit !== undefined) {
+        setLastMonthProfit(Math.floor(Number(_lastMonthProfit)));
       }
 
-      const all = await getAllProfit(db!);
-      if (all !== null && all !== undefined) {
-        setAllProfit(Math.floor(Number(all)));
+      const _allProfit = await getAllProfit(db!);
+      if (_allProfit !== null && _allProfit !== undefined) {
+        setAllProfit(Math.floor(Number(_allProfit)));
       }
-
-      // Fetch income statistics
-      // const todayInc = await getTodayIncome(db!);
-      // if (todayInc !== null && todayInc !== undefined) {
-      //   setTodayIncome(Math.floor(Number(todayInc)));
-      // }
-
-      // const weekInc = await getWeekIncome(db!);
-      // if (weekInc !== null && weekInc !== undefined) {
-      //   setWeekIncome(Math.floor(Number(weekInc)));
-      // }
-
-      // const monthInc = await getMonthIncome(db!);
-      // if (monthInc !== null && monthInc !== undefined) {
-      //   setMonthIncome(Math.floor(Number(monthInc)));
-      // }
-
-      // const lastMonthInc = await getLastMonthIncome(db!);
-      // if (lastMonthInc !== null && lastMonthInc !== undefined) {
-      //   setLastMonthIncome(Math.floor(Number(lastMonthInc)));
-      // }
-
-      // const allInc = await getAllIncome(db!);
-      // if (allInc !== null && allInc !== undefined) {
-      //   setAllIncome(Math.floor(Number(allInc)));
-      // }
-
-
 
       // Fetch sales statistics
-      const todaySales = await getTodaySales(db!);
-      if (todaySales !== null && todaySales !== undefined) {
-        setTodaySales(Math.floor(Number(todaySales)));
+      const _todaySales = await getTodaySales(db!);
+      if (_todaySales !== null && _todaySales !== undefined) {
+        setTodaySales(Math.floor(Number(_todaySales)));
       }
 
-      const weekSales = await getWeekSales(db!);
-      if (weekSales !== null && weekSales !== undefined) {
-        setWeekSales(Math.floor(Number(weekSales)));
+      const _weekSales = await getWeekSales(db!);
+      if (_weekSales !== null && _weekSales !== undefined) {
+        setWeekSales(Math.floor(Number(_weekSales)));
       }
 
-      const monthSales = await getMonthSales(db!);
-      if (monthSales !== null && monthSales !== undefined) {
-        setMonthSales(Math.floor(Number(monthSales)));
+      const _monthSales = await getMonthSales(db!);
+      if (_monthSales !== null && _monthSales !== undefined) {
+        setMonthSales(Math.floor(Number(_monthSales)));
       }
 
-      const lastMonthSales = await getLastMonthSales(db!);
-      if (lastMonthSales !== null && lastMonthSales !== undefined) {
-        setLastMonthSales(Math.floor(Number(lastMonthSales)));
+      const _lastMonthSales = await getLastMonthSales(db!);
+      if (_lastMonthSales !== null && _lastMonthSales !== undefined) {
+        setLastMonthSales(Math.floor(Number(_lastMonthSales)));
       }
 
-      const allSales = await getAllSales(db!);
-      if (allSales !== null && allSales !== undefined) {
-        setAllSales(Math.floor(Number(allSales)));
-      }
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  const changeBalance = async () => {
-    const amount = parseFloat(balanceChange);
-    if (isNaN(amount)) {
-      showMessage({
-        message: 'خطأ',
-        description: 'الرجاء إدخال رقم صحيح',
-        type: 'danger',
-        duration: 3000,
-        floating: true,
-        autoHide: true,
-      });
-      return;
-    }
-
-    try {
-      const key = await updateAdminBalance(db!, amount);
-      if (key) {
-        showMessage({
-          message: 'نجاح',
-          description: 'تم تحديث الرصيد بنجاح',
-          type: 'success',
-          duration: 3000,
-          floating: true,
-          autoHide: true,
-        });
-        setModalVisible(false);
-        setBalanceChange('');
-        getBalance();
+      const _allSales = await getAllSales(db!);
+      if (_allSales !== null && _allSales !== undefined) {
+        setAllSales(Math.floor(Number(_allSales)));
       }
     } catch (error) {
       handleError(error);
@@ -222,13 +147,6 @@ const ProfileScreen = () => {
     getStats();
   }, []);
 
-  const StatCard = ({ title, value }: { title: string; value: number }) => (
-    <View style={styles.statCard}>
-      <Text style={styles.statTitle}>{title}</Text>
-      <Text style={styles.statValue}>{value} ج.م</Text>
-    </View>
-  );
-
   return (
     <>
       {isMenuOpen && (
@@ -252,14 +170,6 @@ const ProfileScreen = () => {
       <ScrollView style={styles.container}>
         {/* Balance Section */}
         <View style={styles.topContainer}>
-          {/* <TouchableOpacity style={styles.balanceCard} onPress={() => setModalVisible(true)}>
-            <View style={styles.balanceContent}>
-              <Text style={styles.balanceTitle}>الرصيد الحالي</Text>
-              <Text style={styles.balanceValue}>{Math.floor(balance)} ج.م</Text>
-            </View>
-            <MaterialIcons name="edit" size={24} color="#4CAF50" />
-          </TouchableOpacity> */}
-
           <View style={styles.balanceCard}>
             <View style={styles.balanceContent}>
               <Text style={styles.balanceTitle}>الباقي عند العملاء</Text>
@@ -315,38 +225,6 @@ const ProfileScreen = () => {
           <StatCard title="إجمالي المبيعات" value={allSales} />
         </View>
       </ScrollView>
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>تحديث الرصيد</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={setBalanceChange}
-              value={balanceChange}
-              placeholder="أدخل المبلغ (يمكن أن يكون سالبًا)"
-              keyboardType="numeric"
-              placeholderTextColor={"black"}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={changeBalance}>
-                <Text style={styles.modalButtonText}>تأكيد</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>إلغاء</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 };
