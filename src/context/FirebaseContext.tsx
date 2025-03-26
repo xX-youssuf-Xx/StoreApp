@@ -52,7 +52,8 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   useEffect(() => {
     const initializeDB = async () => {
       try {
-        await database.setPersistenceEnabled(true);
+        // await database.setPersistenceEnabled(true);
+       // database.keepSynced(false); // This ensures data is always fetched from server
         setDb(database);
       } catch (error) {
         console.error('Error initializing database:', error);

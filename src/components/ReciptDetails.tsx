@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState,useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -13,13 +13,16 @@ import {Item, Receipt, ReceiptProduct} from '../utils/types';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import FileViewer from 'react-native-file-viewer';
 import {getProduct} from '../utils/inventory';
-import {useFirebase} from '../context/FirebaseContext';
+import {useFirebase} from '../context/FirebaseContext'; 
 import { cowLogoBase64 } from '../utils/imageAssets';
 import {returnReceiptHelper} from '../utils/receipts';
 import { useLoading } from '../context/LoadingContext';
 import { showMessage } from "react-native-flash-message";
-
-
+import { captureRef } from 'react-native-view-shot';
+import { WebView } from 'react-native-webview';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Share from 'react-native-share';
+import RNFS from 'react-native-fs';
 
 interface ReceiptDetailsProps {
   isVisible: boolean;
@@ -57,7 +60,117 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
     Record<string, ProductDetail>
   >({});
   const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
+  const webViewRef = useRef<WebView>(null);
+  const [htmlContent, setHtmlContent] = useState('');
+  const viewRef = useRef(null);  // Add this new ref
+  const [isWebViewReady, setIsWebViewReady] = useState(false);
+  const contentRef = useRef<View>(null);
 
+// Add this new function to handle WebView load completion
+const handleWebViewLoad = () => {
+  setIsWebViewReady(true);
+};
+
+// Update the handleGenerateImage function
+const handleGenerateImage = async () => {
+  try {
+    setIsLoadin(true);
+    const details = await fetchAllProductDetails();
+    if (!details) {
+      throw new Error('Failed to fetch product details');
+    }
+
+    // Add image-specific styles to the HTML content
+    const imageSpecificStyles = `
+      <style class="image-only-styles">
+        body {
+          transform: scale(0.7);
+          transform-origin: top left;
+        }
+        .container {
+          width: 550px !important;
+          margin: 0 !important;
+          padding: 10px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 600px !important; /* Set minimum height */
+        }
+        .products-table {
+          width: 100% !important;
+          font-size: 10px !important;
+          margin: 10px 0 !important;
+        }
+        .products-table th,
+        .products-table td {
+          padding: 4px !important;
+          font-size: 10px !important;
+        }
+        .weights-section {
+          width: 100% !important;
+          margin-top: auto !important; /* Push to bottom */
+          margin-bottom: 20px !important;
+          position: relative !important;
+          bottom: 0 !important;
+        }
+        .weights-table {
+          width: 95% !important;
+          margin: 10px auto !important;
+          font-size: 10px !important;
+          page-break-inside: avoid !important;
+        }
+        .weight-cell {
+          font-size: 10px !important;
+          padding: 2px !important;
+        }
+        .product-header {
+          font-size: 10px !important;
+          padding: 2px !important;
+        }
+        .total-weight {
+          font-size: 10px !important;
+          padding: 2px !important;
+        }
+        .summary-container {
+          margin: 10px auto !important;
+        }
+      </style>
+    `;
+
+    // Generate HTML content with additional styles
+    const html = generateDetailedReceiptHTML(details);
+    const htmlWithImageStyles = html.replace('</head>', `${imageSpecificStyles}</head>`);
+    setHtmlContent(htmlWithImageStyles);
+
+    // Wait for content to render
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    if (!contentRef.current) {
+      throw new Error('Content reference not found');
+    }
+
+    // Rest of your existing code...
+    const uri = await captureRef(contentRef, {
+      format: 'jpg',
+      quality: 0.9,
+      result: 'base64'
+    }); 
+
+    const fileName = `Receipt_${receipt?.Rnumber || 'unknown'}_${Date.now()}.jpg`;
+    const filePath = `${Platform.OS === 'android' ? 'file://' : ''}${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+    await RNFS.writeFile(filePath, uri, 'base64');
+    await FileViewer.open(filePath, {
+      showOpenWithDialog: true,
+    });
+
+  } catch (error) {
+    console.error('Error generating image:', error);
+    Alert.alert('Error', 'Failed to generate receipt image');
+  } finally {
+    setIsLoadin(false);
+  }
+};
+  
   // Add this function near the top of your component
   const logReceiptDetails = (receipt: Receipt) => {
     const details = {
@@ -1031,26 +1144,38 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
             </View>
 
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.printButton}
-                onPress={() => handleGeneratePDF(true)}>
-                <Text style={styles.buttonText}>طباعة إيصال</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.returnButton,
-                  receipt.status === 'returned' && styles.disabledButton
-                ]}
-                disabled={receipt.status === 'returned'}
-                onPress={() => {
-                  logReceiptDetails(receipt);
-                  setIsConfirmationVisible(true);
-                }}>
-                <Text style={styles.buttonText}>
-                  {receipt.status === 'returned' ? 'تم الارجاع' : 'ارجاع الإيصال'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+  <View style={styles.iconButtonsRow}>
+    <TouchableOpacity
+      style={styles.iconButton}
+      onPress={() => handleGeneratePDF(true)}>
+      <Icon name="file-pdf-box" size={24} color="white" />
+      <Text style={styles.iconButtonText}>PDF</Text>
+    </TouchableOpacity>
+    
+    <TouchableOpacity
+      style={styles.iconButton}
+      onPress={handleGenerateImage}>
+      <Icon name="image" size={24} color="white" />
+      <Text style={styles.iconButtonText}>صورة</Text>
+    </TouchableOpacity>
+  </View>
+  
+  <TouchableOpacity
+    style={[
+      styles.returnButton,
+      receipt.status === 'returned' && styles.disabledButton
+    ]}
+    disabled={receipt.status === 'returned'}
+    onPress={() => {
+      logReceiptDetails(receipt);
+      setIsConfirmationVisible(true);
+    }}>
+    <Text style={styles.buttonText}>
+      {receipt.status === 'returned' ? 'تم الارجاع' : 'ارجاع الإيصال'}
+    </Text>
+  </TouchableOpacity>
+</View>
+
             {receipt.status === 'returned' && (
               <View style={styles.returnedBanner}>
                 <Text style={styles.returnedText}>
@@ -1062,6 +1187,39 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
           <ConfirmationModal />
         </View>
       </View>
+      <View ref={viewRef} style={{ height: 0, overflow: 'hidden' }}>
+  <WebView
+    ref={webViewRef}
+    source={{ html: htmlContent }}
+    style={{ width: 800, height: 1200 }} // Adjust size as needed
+    scrollEnabled={false}
+    bounces={false}
+    onLoad={handleWebViewLoad}
+    javaScriptEnabled={true}
+    domStorageEnabled={true}
+  />
+</View>
+<View style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0 }}>
+  <View ref={contentRef} style={{ 
+    width: 400 , // Reduced from 800
+    backgroundColor: 'white', 
+    padding: 10, // Reduced padding 
+  }}>
+    <WebView
+      originWhitelist={['*']}
+      source={{ html: htmlContent }}
+      style={{ 
+        width: 400, // Reduced from 800
+        height: 600 , // Reduced from 1200
+      }}
+      scrollEnabled={false}
+      onLoad={() => setIsWebViewReady(true)}
+      javaScriptEnabled={true}
+      domStorageEnabled={true}
+    />
+  </View>
+</View>
+
     </Modal>
   );
 };
@@ -1308,6 +1466,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+iconButtonsRow: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  gap: 20,
+  marginTop: 20,
+},
+iconButton: {
+  backgroundColor: '#2196F3',
+  borderRadius: 10,
+  padding: 15,
+  alignItems: 'center',
+  minWidth: 80,
+  flexDirection: 'column',
+},
+iconButtonText: {
+  color: 'white',
+  fontSize: 12,
+  marginTop: 5,
+  fontWeight: 'bold',
+},
+// Add to the styles object
+viewContainer: {
+  position: 'absolute',
+  top: -9999,
+  left: -9999,
+  width: 800,
+  height: 1200,
+},
+hiddenWebView: {
+  opacity: 0,
+  width: 800,
+  height: 1200,
+  backgroundColor: 'white',
+},
+hiddenContainer: {
+  position: 'absolute',
+  top: -9999,
+  left: -9999,
+  opacity: 0,
+},
+contentContainer: {
+  width: 800,
+  backgroundColor: 'white',
+  padding: 20,
+},
+webviewStyle: {
+  width: 800,
+  height: 1200,
+  backgroundColor: 'white',
+},
 });
 
 export default ReceiptDetails;
