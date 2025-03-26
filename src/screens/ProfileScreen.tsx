@@ -17,6 +17,9 @@ import { showMessage } from 'react-native-flash-message';
 import TopNav from '../../src/components/TopNav';
 import LogoutMenu from '../components/LogoutComponent';
 import { getPendingAdminBalance, getInventoryTotalPrice } from '../utils/auth';
+import ProtectedContent from '../components/ProtectedContent';
+import { usePasswordProtection } from '../context/PasswordProtectionContext';
+
 const StatCard = ({ title, value }: { title: string; value: number }) => (
   <View style={styles.statCard}>
     <Text style={styles.statTitle}>{title}</Text>
@@ -28,6 +31,7 @@ const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const { db } = useFirebase();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { showSecrets } = usePasswordProtection();
 
   // Balance state
   const [pendingBalance, setPendingBalance] = useState(0);
@@ -142,10 +146,16 @@ const ProfileScreen = () => {
     }
   };
 
+  const handleSettingsPress = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   useEffect(() => {
-    getBalance();
-    getStats();
-  }, []);
+    if (showSecrets) {
+      getBalance();
+      getStats();
+    }
+  }, [showSecrets]);
 
   return (
     <>
@@ -159,9 +169,7 @@ const ProfileScreen = () => {
 
       <TopNav
         title="الحساب الشخصي"
-        onSettingsPress={() => {
-          setIsMenuOpen(!isMenuOpen);
-        }}
+        onSettingsPress={handleSettingsPress}
         onSearchChange={() => { }}
         onBackPress={() => navigation.goBack()}
         showBackButton={false}
@@ -172,57 +180,90 @@ const ProfileScreen = () => {
         <View style={styles.topContainer}>
           <View style={styles.balanceCard}>
             <View style={styles.balanceContent}>
-              <Text style={styles.balanceTitle}>الباقي عند العملاء</Text>
-              <Text style={styles.balanceValue}>{Math.floor(pendingBalance)} ج.م</Text>
+              <ProtectedContent>
+                <Text style={styles.balanceTitle}>الباقي عند العملاء</Text>
+                <Text style={styles.balanceValue}>
+                  {Math.floor(pendingBalance)} ج.م
+                </Text>
+              </ProtectedContent>
             </View>
           </View>
 
           <View style={styles.balanceCard}>
             <View style={styles.balanceContent}>
-              <Text style={styles.balanceTitle}>سعر بضاعة المخزن</Text>
-              <Text style={styles.balanceValue}>{Math.floor(inventoryTotalPrice)} ج.م</Text>
+              <ProtectedContent>
+                <Text style={styles.balanceTitle}>سعر بضاعة المخزن</Text>
+                <Text style={styles.balanceValue}>
+                  {Math.floor(inventoryTotalPrice)} ج.م
+                </Text>
+              </ProtectedContent>
             </View>
           </View>
-        </View>
 
-        {/* Today's Stats */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
-          <StatCard title="الربح" value={todayProfit} />
-          {/* <StatCard title="الدخل" value={todayIncome} /> */}
-          <StatCard title="المبيعات" value={todaySales} />
-        </View>
+          {/* Today's Stats */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
+            <View style={styles.statsRow}>
+              <ProtectedContent>
+                <StatCard title="الربح" value={todayProfit} />
+              </ProtectedContent>
+              <ProtectedContent>
+                <StatCard title="المبيعات" value={todaySales} />
+              </ProtectedContent>
+            </View>
+          </View>
 
-        {/* Week Stats */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
-          <StatCard title="الربح" value={weekProfit} />
-          {/* <StatCard title="الدخل" value={weekIncome} /> */}
-          <StatCard title="المبيعات" value={weekSales} />
-        </View>
+          {/* Week Stats */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
+            <View style={styles.statsRow}>
+              <ProtectedContent>
+                <StatCard title="الربح" value={weekProfit} />
+              </ProtectedContent>
+              <ProtectedContent>
+                <StatCard title="المبيعات" value={weekSales} />
+              </ProtectedContent>
+            </View>
+          </View>
 
-        {/* Month Stats */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
-          <StatCard title="الربح" value={monthProfit} />
-          {/* <StatCard title="الدخل" value={monthIncome} /> */}
-          <StatCard title="المبيعات" value={monthSales} />
-        </View>
+          {/* Month Stats */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
+            <View style={styles.statsRow}>
+              <ProtectedContent>
+                <StatCard title="الربح" value={monthProfit} />
+              </ProtectedContent>
+              <ProtectedContent>
+                <StatCard title="المبيعات" value={monthSales} />
+              </ProtectedContent>
+            </View>
+          </View>
 
-        {/* Last Month Stats */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
-          <StatCard title="الربح" value={lastMonthProfit} />
-          {/* <StatCard title="الدخل" value={lastMonthIncome} /> */}
-          <StatCard title="المبيعات" value={lastMonthSales} />
-        </View>
+          {/* Last Month Stats */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
+            <View style={styles.statsRow}>
+              <ProtectedContent>
+                <StatCard title="الربح" value={lastMonthProfit} />
+              </ProtectedContent>
+              <ProtectedContent>
+                <StatCard title="المبيعات" value={lastMonthSales} />
+              </ProtectedContent>
+            </View>
+          </View>
 
-        {/* Total Stats */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
-          <StatCard title="إجمالي الربح" value={allProfit} />
-          {/* <StatCard title="إجمالي الدخل" value={allIncome} /> */}
-          <StatCard title="إجمالي المبيعات" value={allSales} />
+          {/* Total Stats */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
+            <View style={styles.statsRow}>
+              <ProtectedContent>
+                <StatCard title="إجمالي الربح" value={allProfit} />
+              </ProtectedContent>
+              <ProtectedContent>
+                <StatCard title="إجمالي المبيعات" value={allSales} />
+              </ProtectedContent>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </>
@@ -346,6 +387,68 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  secretPopupContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  secretPopup: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  secretPopupTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  secretInput: {
+    width: '100%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    fontSize: 16,
+    textAlign: 'right',
+  },
+  secretButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 10,
+  },
+  secretButton: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  secretButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
   },
 });
 

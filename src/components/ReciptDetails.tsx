@@ -1,4 +1,6 @@
-import React, {useState,useRef, useEffect} from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,19 +11,18 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import {Item, Receipt, ReceiptProduct} from '../utils/types';
+import { Item, Receipt, ReceiptProduct } from '../utils/types';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import FileViewer from 'react-native-file-viewer';
-import {getProduct} from '../utils/inventory';
-import {useFirebase} from '../context/FirebaseContext'; 
+import { getProduct } from '../utils/inventory';
+import { useFirebase } from '../context/FirebaseContext';
 import { cowLogoBase64 } from '../utils/imageAssets';
-import {returnReceiptHelper} from '../utils/receipts';
+import { returnReceiptHelper } from '../utils/receipts';
 import { useLoading } from '../context/LoadingContext';
 import { showMessage } from "react-native-flash-message";
 import { captureRef } from 'react-native-view-shot';
 import { WebView } from 'react-native-webview';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 
 interface ReceiptDetailsProps {
@@ -51,8 +52,8 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
   receiptUuid,
   clientName,
 }) => {
-  const {db} = useFirebase();
-  const { setIsLoadin } = useLoading();
+  const { db } = useFirebase();
+  const { setIsLoading } = useLoading();
   const [expandedProducts, setExpandedProducts] = useState<{
     [key: string]: boolean;
   }>({});
@@ -66,22 +67,22 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
   const [isWebViewReady, setIsWebViewReady] = useState(false);
   const contentRef = useRef<View>(null);
 
-// Add this new function to handle WebView load completion
-const handleWebViewLoad = () => {
-  setIsWebViewReady(true);
-};
+  // Add this new function to handle WebView load completion
+  const handleWebViewLoad = () => {
+    setIsWebViewReady(true);
+  };
 
-// Update the handleGenerateImage function
-const handleGenerateImage = async () => {
-  try {
-    setIsLoadin(true);
-    const details = await fetchAllProductDetails();
-    if (!details) {
-      throw new Error('Failed to fetch product details');
-    }
+  // Update the handleGenerateImage function
+  const handleGenerateImage = async () => {
+    try {
+      setIsLoading(true);
+      const details = await fetchAllProductDetails();
+      if (!details) {
+        throw new Error('Failed to fetch product details');
+      }
 
-    // Add image-specific styles to the HTML content
-    const imageSpecificStyles = `
+      // Add image-specific styles to the HTML content
+      const imageSpecificStyles = `
       <style class="image-only-styles">
         body {
           transform: scale(0.7);
@@ -136,41 +137,41 @@ const handleGenerateImage = async () => {
       </style>
     `;
 
-    // Generate HTML content with additional styles
-    const html = generateDetailedReceiptHTML(details);
-    const htmlWithImageStyles = html.replace('</head>', `${imageSpecificStyles}</head>`);
-    setHtmlContent(htmlWithImageStyles);
+      // Generate HTML content with additional styles
+      const html = generateDetailedReceiptHTML(details);
+      const htmlWithImageStyles = html.replace('</head>', `${imageSpecificStyles}</head>`);
+      setHtmlContent(htmlWithImageStyles);
 
-    // Wait for content to render
-    await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for content to render
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-    if (!contentRef.current) {
-      throw new Error('Content reference not found');
+      if (!contentRef.current) {
+        throw new Error('Content reference not found');
+      }
+
+      // Rest of your existing code...
+      const uri = await captureRef(contentRef, {
+        format: 'jpg',
+        quality: 0.9,
+        result: 'base64'
+      });
+
+      const fileName = `Receipt_${receipt?.Rnumber || 'unknown'}_${Date.now()}.jpg`;
+      const filePath = `${Platform.OS === 'android' ? 'file://' : ''}${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      await RNFS.writeFile(filePath, uri, 'base64');
+      await FileViewer.open(filePath, {
+        showOpenWithDialog: true,
+      });
+
+    } catch (error) {
+      console.error('Error generating image:', error);
+      Alert.alert('Error', 'Failed to generate receipt image');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    // Rest of your existing code...
-    const uri = await captureRef(contentRef, {
-      format: 'jpg',
-      quality: 0.9,
-      result: 'base64'
-    }); 
-
-    const fileName = `Receipt_${receipt?.Rnumber || 'unknown'}_${Date.now()}.jpg`;
-    const filePath = `${Platform.OS === 'android' ? 'file://' : ''}${RNFS.DocumentDirectoryPath}/${fileName}`;
-
-    await RNFS.writeFile(filePath, uri, 'base64');
-    await FileViewer.open(filePath, {
-      showOpenWithDialog: true,
-    });
-
-  } catch (error) {
-    console.error('Error generating image:', error);
-    Alert.alert('Error', 'Failed to generate receipt image');
-  } finally {
-    setIsLoadin(false);
-  }
-};
-  
   // Add this function near the top of your component
   const logReceiptDetails = (receipt: Receipt) => {
     const details = {
@@ -186,7 +187,7 @@ const handleGenerateImage = async () => {
       totalBoughtPrice: receipt.totalBoughtPrice,
       totalPrice: receipt.totalPrice,
     };
-  
+
     console.log('\nReceipt Details:');
     console.log('----------------------------------------');
     Object.entries(details).forEach(([key, value]) => {
@@ -328,12 +329,11 @@ const handleGenerateImage = async () => {
         `<tr>${allColumns
           .map(
             col =>
-              `<td class="weight-cell">${
-                col.weights[i]
-                  ? (productDetails[col.name]?.isKgInTable && !productDetails[col.name]?.isStatic)
-                    ? col.weights[i].toFixed(2)  // Display in kg
-                    : convertToLbs(col.weights[i])  // Convert to lbs
-                  : '-'
+              `<td class="weight-cell">${col.weights[i]
+                ? (productDetails[col.name]?.isKgInTable && !productDetails[col.name]?.isStatic)
+                  ? col.weights[i].toFixed(2)  // Display in kg
+                  : convertToLbs(col.weights[i])  // Convert to lbs
+                : '-'
               }</td>`,
           )
           .join('')}</tr>`,
@@ -344,12 +344,11 @@ const handleGenerateImage = async () => {
       `<tr>${allColumns
         .map(
           col =>
-            `<td class="total-weight">${
-              col.total !== null
-                ? (productDetails[col.name]?.isKgInTable && !productDetails[col.name]?.isStatic)
-                  ? Number(col.total).toFixed(2)  // Display in kg
-                  : convertToLbs(Number(col.total))  // Convert to lbs
-                : '-'
+            `<td class="total-weight">${col.total !== null
+              ? (productDetails[col.name]?.isKgInTable && !productDetails[col.name]?.isStatic)
+                ? Number(col.total).toFixed(2)  // Display in kg
+                : convertToLbs(Number(col.total))  // Convert to lbs
+              : '-'
             }</td>`,
         )
         .join('')}</tr>`,
@@ -370,7 +369,7 @@ const handleGenerateImage = async () => {
           // Convert Product to ProductDetail format
           details[productName] = {
             items: Object.fromEntries(
-              Object.entries(productDetail.items || {}).map(([id, item]) : [string, Item] => [
+              Object.entries(productDetail.items || {}).map(([id, item]): [string, Item] => [
                 id,
                 {
                   order: item.order,
@@ -762,8 +761,8 @@ const handleGenerateImage = async () => {
           <div class="summary-row">
             <div>الإجمالي:</div>
             <div>${(
-              (receipt?.initialBalance || 0) + (receipt?.totalPrice || 0)
-            ).toFixed(2)} ج.م</div>
+        (receipt?.initialBalance || 0) + (receipt?.totalPrice || 0)
+      ).toFixed(2)} ج.م</div>
           </div>
           <div class="summary-row">
             <div>المبلغ المدفوع:</div>
@@ -801,8 +800,8 @@ const handleGenerateImage = async () => {
         <td>${(product.sellPrice || 0).toFixed(2)}</td>
         <td>${calculateNumberOfItems(product.name, product)}</td>
         <td>${((product.totalWeight || 0) * (product.sellPrice || 0)).toFixed(
-          2,
-        )}</td>
+      2,
+    )}</td>
       </tr>
     `;
 
@@ -890,7 +889,7 @@ const handleGenerateImage = async () => {
       if (!details) {
         throw new Error('Failed to fetch product details');
       }
-  
+
       const options = {
         html: generateDetailedReceiptHTML(details),
         fileName: `receipt_${clientName || 'unknown'}_${receipt?.Rnumber || 'unknown'}`,
@@ -899,18 +898,18 @@ const handleGenerateImage = async () => {
         height: detailed ? 210 : undefined,
         base64: false,
       };
-  
+
       const file = await RNHTMLtoPDF.convert(options);
-  
+
       if (file.filePath) {
         console.log('PDF saved to:', file.filePath);
-        
+
         // Explicitly set the MIME type when opening
         const fileOptions = {
           showOpenWithDialog: true,
           type: 'application/pdf'  // Explicitly set MIME type
         };
-        
+
         // For Android, you might need to use content:// URI
         if (Platform.OS === 'android') {
           const fileUri = `file://${file.filePath}`;
@@ -942,12 +941,12 @@ const handleGenerateImage = async () => {
         });
         return;
       }
-  
-      setIsLoadin(true);
+
+      setIsLoading(true);
       await returnReceiptHelper(db, String(receiptUuid));
-      
+
       onClose(); // Close modal first
-      
+
       showMessage({
         message: "نجاح",
         description: "تم ارجاع الإيصال بنجاح",
@@ -955,7 +954,7 @@ const handleGenerateImage = async () => {
         duration: 3000,
         floating: true,
       });
-      
+
     } catch (error) {
       onClose();
       console.error('Error returning receipt:', error);
@@ -967,10 +966,10 @@ const handleGenerateImage = async () => {
         floating: true,
       });
     } finally {
-      setIsLoadin(false);
+      setIsLoading(false);
     }
   };
-  
+
   const ConfirmationModal = () => (
     <Modal
       animationType="fade"
@@ -1002,7 +1001,7 @@ const handleGenerateImage = async () => {
       </View>
     </Modal>
   );
-  
+
   if (!receipt) {
     return (
       <Modal
@@ -1054,61 +1053,61 @@ const handleGenerateImage = async () => {
 
             {receipt.products && Object.entries(receipt.products).length > 0 ? (
               Object.entries(receipt.products)
-              .sort(([_, a], [__, b]) => (a.Pnumber || 0) - (b.Pnumber || 0))
-              .map(
-                ([productName, product], index) => (
-                  <View key={index} style={[styles.productCard, { opacity: receipt?.status === 'returned' ? 0.8 : 1 }]}>
-                    <TouchableOpacity
-                      onPress={() => toggleProductExpansion(productName)}>
-                      <View style={styles.productHeader}>
-                        <Text style={styles.productDetail}>
-                          الوزن: {product.totalWeight?.toFixed(2) ?? 'غير محدد'}{' '}
-                          كجم
-                        </Text>
-                        <Text style={styles.productName}>{productName}</Text>
-                      </View>
-                      <View style={styles.productDetails}>
-                        <Text style={styles.productTotal}>
-                          {calculateTotal(product)} ج.م
-                        </Text>
-                        <Text style={styles.productDetail}>
-                          السعر: {product.sellPrice} ج.م/كجم
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
+                .sort(([_, a], [__, b]) => (a.Pnumber || 0) - (b.Pnumber || 0))
+                .map(
+                  ([productName, product], index) => (
+                    <View key={index} style={[styles.productCard, { opacity: receipt?.status === 'returned' ? 0.8 : 1 }]}>
+                      <TouchableOpacity
+                        onPress={() => toggleProductExpansion(productName)}>
+                        <View style={styles.productHeader}>
+                          <Text style={styles.productDetail}>
+                            الوزن: {product.totalWeight?.toFixed(2) ?? 'غير محدد'}{' '}
+                            كجم
+                          </Text>
+                          <Text style={styles.productName}>{productName}</Text>
+                        </View>
+                        <View style={styles.productDetails}>
+                          <Text style={styles.productTotal}>
+                            {calculateTotal(product)} ج.م
+                          </Text>
+                          <Text style={styles.productDetail}>
+                            السعر: {product.sellPrice} ج.م/كجم
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
 
-                    {expandedProducts[productName] && product.items && (
-                      <View style={styles.itemsContainer}>
-                        {Object.entries(product.items)
-                          .sort(([idA], [idB]) => {
-                            const orderA =
-                              productDetails[productName]?.items[idA]?.order ||
-                              0;
-                            const orderB =
-                              productDetails[productName]?.items[idB]?.order ||
-                              0;
-                            return orderA - orderB;
-                          })
-                          .reduce((rows, [itemId, weight], index) => {
-                            if (index % 2 === 0) rows.push([]);
-                            rows[rows.length - 1].push(
-                              <Text key={itemId} style={styles.itemText}>
-                                القطعة {getArabicOrdinal(index + 1)} : {weight}{' '}
-                                كجم
-                              </Text>,
-                            );
-                            return rows;
-                          }, [] as React.ReactNode[][])
-                          .map((row, rowIndex) => (
-                            <View key={rowIndex} style={styles.itemRow}>
-                              {row}
-                            </View>
-                          ))}
-                      </View>
-                    )}
-                  </View>
-                ),
-              )
+                      {expandedProducts[productName] && product.items && (
+                        <View style={styles.itemsContainer}>
+                          {Object.entries(product.items)
+                            .sort(([idA], [idB]) => {
+                              const orderA =
+                                productDetails[productName]?.items[idA]?.order ||
+                                0;
+                              const orderB =
+                                productDetails[productName]?.items[idB]?.order ||
+                                0;
+                              return orderA - orderB;
+                            })
+                            .reduce((rows, [itemId, weight], index) => {
+                              if (index % 2 === 0) rows.push([]);
+                              rows[rows.length - 1].push(
+                                <Text key={itemId} style={styles.itemText}>
+                                  القطعة {getArabicOrdinal(index + 1)} : {weight}{' '}
+                                  كجم
+                                </Text>,
+                              );
+                              return rows;
+                            }, [] as React.ReactNode[][])
+                            .map((row, rowIndex) => (
+                              <View key={rowIndex} style={styles.itemRow}>
+                                {row}
+                              </View>
+                            ))}
+                        </View>
+                      )}
+                    </View>
+                  ),
+                )
             ) : (
               <Text style={styles.noProductsText}>
                 لا توجد منتجات لهذا الإيصال
@@ -1144,37 +1143,37 @@ const handleGenerateImage = async () => {
             </View>
 
             <View style={styles.buttonContainer}>
-  <View style={styles.iconButtonsRow}>
-    <TouchableOpacity
-      style={styles.iconButton}
-      onPress={() => handleGeneratePDF(true)}>
-      <Icon name="file-pdf-box" size={24} color="white" />
-      <Text style={styles.iconButtonText}>PDF</Text>
-    </TouchableOpacity>
-    
-    <TouchableOpacity
-      style={styles.iconButton}
-      onPress={handleGenerateImage}>
-      <Icon name="image" size={24} color="white" />
-      <Text style={styles.iconButtonText}>صورة</Text>
-    </TouchableOpacity>
-  </View>
-  
-  <TouchableOpacity
-    style={[
-      styles.returnButton,
-      receipt.status === 'returned' && styles.disabledButton
-    ]}
-    disabled={receipt.status === 'returned'}
-    onPress={() => {
-      logReceiptDetails(receipt);
-      setIsConfirmationVisible(true);
-    }}>
-    <Text style={styles.buttonText}>
-      {receipt.status === 'returned' ? 'تم الارجاع' : 'ارجاع الإيصال'}
-    </Text>
-  </TouchableOpacity>
-</View>
+              <View style={styles.iconButtonsRow}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => handleGeneratePDF(true)}>
+                  <Icon name="file-pdf-box" size={24} color="white" />
+                  <Text style={styles.iconButtonText}>PDF</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleGenerateImage}>
+                  <Icon name="image" size={24} color="white" />
+                  <Text style={styles.iconButtonText}>صورة</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.returnButton,
+                  receipt.status === 'returned' && styles.disabledButton
+                ]}
+                disabled={receipt.status === 'returned'}
+                onPress={() => {
+                  logReceiptDetails(receipt);
+                  setIsConfirmationVisible(true);
+                }}>
+                <Text style={styles.buttonText}>
+                  {receipt.status === 'returned' ? 'تم الارجاع' : 'ارجاع الإيصال'}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {receipt.status === 'returned' && (
               <View style={styles.returnedBanner}>
@@ -1188,38 +1187,37 @@ const handleGenerateImage = async () => {
         </View>
       </View>
       <View ref={viewRef} style={{ height: 0, overflow: 'hidden' }}>
-  <WebView
-    ref={webViewRef}
-    source={{ html: htmlContent }}
-    style={{ width: 800, height: 1200 }} // Adjust size as needed
-    scrollEnabled={false}
-    bounces={false}
-    onLoad={handleWebViewLoad}
-    javaScriptEnabled={true}
-    domStorageEnabled={true}
-  />
-</View>
-<View style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0 }}>
-  <View ref={contentRef} style={{ 
-    width: 400 , // Reduced from 800
-    backgroundColor: 'white', 
-    padding: 10, // Reduced padding 
-  }}>
-    <WebView
-      originWhitelist={['*']}
-      source={{ html: htmlContent }}
-      style={{ 
-        width: 400, // Reduced from 800
-        height: 600 , // Reduced from 1200
-      }}
-      scrollEnabled={false}
-      onLoad={() => setIsWebViewReady(true)}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-    />
-  </View>
-</View>
-
+        <WebView
+          ref={webViewRef}
+          source={{ html: htmlContent }}
+          style={{ width: 800, height: 1200 }} // Adjust size as needed
+          scrollEnabled={false}
+          bounces={false}
+          onLoad={handleWebViewLoad}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+        />
+      </View>
+      <View style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0 }}>
+        <View ref={contentRef} style={{
+          width: 400, // Reduced from 800
+          backgroundColor: 'white',
+          padding: 10, // Reduced padding 
+        }}>
+          <WebView
+            originWhitelist={['*']}
+            source={{ html: htmlContent }}
+            style={{
+              width: 400, // Reduced from 800
+              height: 600, // Reduced from 1200
+            }}
+            scrollEnabled={false}
+            onLoad={() => setIsWebViewReady(true)}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+          />
+        </View>
+      </View>
     </Modal>
   );
 };
@@ -1296,7 +1294,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
   },
@@ -1450,7 +1448,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6c757d',  // Grey color
     opacity: 0.7,
   },
-  
+
   returnedBanner: {
     backgroundColor: 'rgba(220, 53, 69, 0.1)',
     padding: 10,
@@ -1459,63 +1457,63 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dc3545',
   },
-  
+
   returnedText: {
     color: '#dc3545',
     textAlign: 'center',
     fontSize: 14,
     fontWeight: 'bold',
   },
-iconButtonsRow: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  gap: 20,
-  marginTop: 20,
-},
-iconButton: {
-  backgroundColor: '#2196F3',
-  borderRadius: 10,
-  padding: 15,
-  alignItems: 'center',
-  minWidth: 80,
-  flexDirection: 'column',
-},
-iconButtonText: {
-  color: 'white',
-  fontSize: 12,
-  marginTop: 5,
-  fontWeight: 'bold',
-},
-// Add to the styles object
-viewContainer: {
-  position: 'absolute',
-  top: -9999,
-  left: -9999,
-  width: 800,
-  height: 1200,
-},
-hiddenWebView: {
-  opacity: 0,
-  width: 800,
-  height: 1200,
-  backgroundColor: 'white',
-},
-hiddenContainer: {
-  position: 'absolute',
-  top: -9999,
-  left: -9999,
-  opacity: 0,
-},
-contentContainer: {
-  width: 800,
-  backgroundColor: 'white',
-  padding: 20,
-},
-webviewStyle: {
-  width: 800,
-  height: 1200,
-  backgroundColor: 'white',
-},
+  iconButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginTop: 20,
+  },
+  iconButton: {
+    backgroundColor: '#2196F3',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    minWidth: 80,
+    flexDirection: 'column',
+  },
+  iconButtonText: {
+    color: 'white',
+    fontSize: 12,
+    marginTop: 5,
+    fontWeight: 'bold',
+  },
+  // Add to the styles object
+  viewContainer: {
+    position: 'absolute',
+    top: -9999,
+    left: -9999,
+    width: 800,
+    height: 1200,
+  },
+  hiddenWebView: {
+    opacity: 0,
+    width: 800,
+    height: 1200,
+    backgroundColor: 'white',
+  },
+  hiddenContainer: {
+    position: 'absolute',
+    top: -9999,
+    left: -9999,
+    opacity: 0,
+  },
+  contentContainer: {
+    width: 800,
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  webviewStyle: {
+    width: 800,
+    height: 1200,
+    backgroundColor: 'white',
+  },
 });
 
 export default ReceiptDetails;

@@ -4,7 +4,7 @@ import Loading from '../components/Loading';
 
 interface LoadingContextType {
   isLoading: boolean;
-  setIsLoadin: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   forceLoading: boolean;
   setForceLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -16,11 +16,11 @@ interface LoadingProviderProps {
 }
 
 export const LoadingProvider = ({ children }: LoadingProviderProps) => {
-  const [isLoading, setIsLoadin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [forceLoading, setForceLoading] = useState(false);
 
   return (
-    <LoadingContext.Provider value={{ isLoading, setIsLoadin, forceLoading, setForceLoading }}>
+    <LoadingContext.Provider value={{ isLoading, setIsLoading, forceLoading, setForceLoading }}>
       {children}
       {/* JOE: SHOW LOADING OVERLAY */}
       <Loading isVisible={isLoading ||forceLoading } />

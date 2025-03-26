@@ -8,7 +8,7 @@ import {FIREBASE_ERROR, REQUEST_LIMIT} from '../config/Constants';
 import {FirebaseError} from '../errors/FirebaseError';
 import {User} from './types';
 import {getAllClients} from './clitent';
-import {getAllProducts, getProduct} from './inventory';
+import {getAllProducts} from './inventory';
 
 export const getActiveUser = async (
   database: FirebaseDatabaseTypes.Module,
@@ -149,19 +149,19 @@ export const getInventoryTotalPrice = async (
 
     let total = 0;
     await Promise.allSettled(
-      Object.entries(products).map(async ([name, product]) => {
+      Object.entries(products).map(async ([_, product]) => {
         if (!product.status || product.status != 'deleted') {
           try {
             const items = Object.values(product.items).filter(
               item => !item.status || item.status != 'deleted',
             );
-  
+
             Object.entries(items).map(([_, item]) => {
               total += item.weight * item.boughtPrice;
             });
-          } catch(e) {
-            console.log("error")
-            console.log(e)
+          } catch (e) {
+            console.log('error');
+            console.log(e);
           }
         }
       }),
@@ -171,5 +171,20 @@ export const getInventoryTotalPrice = async (
   } catch (e) {
     console.log('ERRROROR', e);
     return 100;
+  }
+};
+
+export const getHashedAdminPassword = async (
+  database: FirebaseDatabaseTypes.Module,
+): Promise<string | false> => {
+  try {
+    const adminPass = await attemptFirebaseGet(database, '/admin_password', REQUEST_LIMIT);
+    if(adminPass === FIREBASE_ERROR) {
+        throw new FirebaseError(FIREBASE_ERROR);
+    }
+    return adminPass.val() as string;
+  } catch (e) {
+    console.log('ERRROROR', e);
+    return false;
   }
 };

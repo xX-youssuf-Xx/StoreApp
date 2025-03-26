@@ -1,11 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState} from 'react';
-import {SafeAreaView, StyleSheet, Text} from 'react-native';
+import {SafeAreaView, StyleSheet} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import LottieView from 'lottie-react-native';
 import FlashMessage, {showMessage} from 'react-native-flash-message';
+import {FirebaseProvider} from './src/context/FirebaseContext';
+import {LoadingProvider} from './src/context/LoadingContext';
+import {PasswordProtectionProvider} from './src/context/PasswordProtectionContext';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -18,7 +22,7 @@ import NoActiveScreen from './src/screens/NoActiveScreen';
 
 // Components
 import BottomTabBar from './src/components/BottomTabBar';
-import {deleteItem, getItem, setItem} from './src/utils/localStorage';
+import {getItem, setItem} from './src/utils/localStorage';
 import {getActiveUser, setActiveUser} from './src/utils/auth';
 import {FIREBASE_ERROR} from './src/config/Constants';
 import {FirebaseError} from './src/errors/FirebaseError';
@@ -49,7 +53,7 @@ const TabNavigator = () => {
 
 const App: React.FC = () => {
   console.log('Rendering App component');
-  const {forceLoading, setForceLoading} = useLoading();
+  const {forceLoading} = useLoading();
   const {db} = useFirebase();
   const [initialScreen, setInitialScreen] = useState<string | null>(null);
 
@@ -139,22 +143,26 @@ const App: React.FC = () => {
 
   console.log('Rendering main navigation structure');
   return (
-    <>
-      <GestureHandlerRootView style={{flex: 1}}>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName={initialScreen}>
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="AlreadyActive" component={AlreadyActiveScreen} />
-            <Stack.Screen name="NoActiveUser" component={NoActiveScreen} />
-            <Stack.Screen name="ClientDetails" component={ClientDetailsScreen} />
-            <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-            <Stack.Screen name="StorageDetails" component={StorageDetailsScreen} />
-            </Stack.Navigator>
-        </NavigationContainer>
-      </GestureHandlerRootView>
-      <FlashMessage position="top" floating={true} style={{ elevation: 1000 }} />
-      </>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <FirebaseProvider>
+        <LoadingProvider>
+          <PasswordProtectionProvider>
+            <NavigationContainer>
+              <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName={initialScreen}>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="AlreadyActive" component={AlreadyActiveScreen} />
+                <Stack.Screen name="NoActiveUser" component={NoActiveScreen} />
+                <Stack.Screen name="MainTabs" component={TabNavigator} />
+                <Stack.Screen name="ClientDetails" component={ClientDetailsScreen} />
+                <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+                <Stack.Screen name="StorageDetails" component={StorageDetailsScreen} />
+              </Stack.Navigator>
+            </NavigationContainer>
+            <FlashMessage position="top" floating={true} style={{ elevation: 1000 }} />
+          </PasswordProtectionProvider>
+        </LoadingProvider>
+      </FirebaseProvider>
+    </GestureHandlerRootView>
   );
 };
   

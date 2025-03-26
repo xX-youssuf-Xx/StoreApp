@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: Dimensions.get('window').width,   // Full width of the screen
     height: Dimensions.get('window').height, // Full height of the screen
+    zIndex: 1001
   },
   lottie: {
     width: width * 0.6,  // Adjust the size of the Lottie animation

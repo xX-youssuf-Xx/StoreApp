@@ -1,19 +1,19 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
   ScrollView,
   Modal,
   TouchableWithoutFeedback,
-  Dimensions
 } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useFirebase } from '../context/FirebaseContext';
 import TopNav from '../../src/components/TopNav';
 import LogoutMenu from '../components/LogoutComponent';
-import { getTodayProfit, getTodayIncome, getTodaySales } from '../utils/stats';
+import { getTodayProfit, getTodaySales } from '../utils/stats';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR, FIREBASE_CREATING_ERROR } from '../config/Constants';
@@ -21,22 +21,78 @@ import { showMessage } from 'react-native-flash-message';
 import CreateProduct from '../components/CreateProduct';
 import CreateClient from '../components/CreateClient';
 import Svg, { Path, Polyline, Line } from 'react-native-svg';
+import { useLoading } from '../context/LoadingContext';
+import { usePasswordProtection } from '../context/PasswordProtectionContext';
+import ProtectedContent from '../components/ProtectedContent';
+
+const StatCard = ({ title, value }: { title: string; value: number }) => (
+  <View style={styles.statCard}>
+    <Text style={styles.statTitle}>{title}</Text>
+    <Text style={styles.statValue}>{value} ج.م</Text>
+  </View>
+);
+
+const ActionCard = ({ title, icon, onPress }: { title: string; icon: string; onPress: () => void }) => (
+  <TouchableOpacity style={styles.actionCard} onPress={onPress}>
+    <MaterialIcons name={icon} size={32} color="#4CAF50" />
+    <Text style={styles.actionTitle}>{title}</Text>
+  </TouchableOpacity>
+);
+
+const UpArrowIcon = () => (
+  <Svg
+    width={32}
+    height={32}
+    viewBox="0 0 24 24"
+    stroke="#4CAF50"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+    style={{ transform: [{ rotate: '-90deg' }] }}>
+    <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <Polyline points="16 17 21 12 16 7" />
+    <Line x1="21" y1="12" x2="9" y2="12" />
+  </Svg>
+);
+
+// Custom Modal Component
+const CustomModal = ({ isVisible, onClose, children }: { isVisible: boolean; onClose: () => void; children: React.ReactNode }) => (
+  <Modal
+    transparent
+    visible={isVisible}
+    animationType="fade"
+    onRequestClose={onClose}
+  >
+    <TouchableWithoutFeedback onPress={onClose}>
+      <View style={styles.modalOverlay}>
+        <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+          <View style={styles.modalContent}>
+            {children}
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
+    </TouchableWithoutFeedback>
+  </Modal>
+);
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const { db } = useFirebase();
+  const { setIsLoading } = useLoading();
 
   // Menu state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   // Modal states
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  
+
   // Stats states
   const [todayProfit, setTodayProfit] = useState(0);
   const [todaySales, setTodaySales] = useState(0);
-  const [searchText, setSearchText] = useState('');
+
+  const { showSecrets } = usePasswordProtection();
 
   const getTodayStats = async () => {
     try {
@@ -53,6 +109,8 @@ const HomeScreen = () => {
       }
     } catch (error) {
       handleError(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,16 +135,8 @@ const HomeScreen = () => {
     }
   };
 
-  useEffect(() => {
-    getTodayStats();
-  }, []);
-
   const handleSettingsPress = () => {
     setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleSearchChange = (text: string) => {
-    setSearchText(text);
   };
 
   const handleAddClient = () => {
@@ -106,74 +156,33 @@ const HomeScreen = () => {
     navigation.navigate('StorageDetails');
   };
 
-  const StatCard = ({ title, value }: { title: string; value: number }) => (
-    <View style={styles.statCard}>
-      <Text style={styles.statTitle}>{title}</Text>
-      <Text style={styles.statValue}>{value} ج.م</Text>
-    </View>
-  );
-
-  const ActionCard = ({ title, icon, onPress }: { title: string; icon: string; onPress: () => void }) => (
-    <TouchableOpacity style={styles.actionCard} onPress={onPress}>
-      <MaterialIcons name={icon} size={32} color="#4CAF50" />
-      <Text style={styles.actionTitle}>{title}</Text>
-    </TouchableOpacity>
-  );
-
-  const UpArrowIcon = () => (
-    <Svg
-      width={32}
-      height={32}
-      viewBox="0 0 24 24"
-      stroke="#4CAF50"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-      style={{ transform: [{ rotate: '-90deg' }] }}>
-      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <Polyline points="16 17 21 12 16 7" />
-      <Line x1="21" y1="12" x2="9" y2="12" />
-    </Svg>
-  );
-
-  // Custom Modal Component
-  const CustomModal = ({ isVisible, onClose, children }: { isVisible: boolean; onClose: () => void; children: React.ReactNode }) => (
-    <Modal
-      transparent
-      visible={isVisible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              {children}
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
-  );
+  useEffect(() => {
+    if (showSecrets) {
+      getTodayStats();
+    }
+  }, [showSecrets]);
 
   return (
     <>
       <TopNav
         title="الرئيسية"
         onSettingsPress={handleSettingsPress}
-        onSearchChange={handleSearchChange}
+        onSearchChange={() => { }}
         showBackButton={false}
         showSearchIcon={false}
       />
-      
+
       <ScrollView style={styles.container}>
         {/* Today's Stats Section */}
         <View style={styles.statsContainer}>
           <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
           <View style={styles.statsRow}>
-            <StatCard title="الربح" value={todayProfit} />
-            <StatCard title="المبيعات" value={todaySales} />
+            <ProtectedContent>
+              <StatCard title="الربح" value={todayProfit} />
+            </ProtectedContent>
+            <ProtectedContent>
+              <StatCard title="المبيعات" value={todaySales} />
+            </ProtectedContent>
           </View>
         </View>
 
@@ -190,7 +199,6 @@ const HomeScreen = () => {
             icon="add-box"
             onPress={handleAddProduct}
           />
-          {/* Add this new ActionCard */}
           <TouchableOpacity style={styles.actionCard} onPress={handleStoragePress}>
             <UpArrowIcon />
             <Text style={styles.actionTitle}>المخزن</Text>
@@ -203,7 +211,7 @@ const HomeScreen = () => {
         isVisible={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
       >
-        <CreateClient 
+        <CreateClient
           closeModal={() => setIsClientModalOpen(false)}
           reloadClients={dummyReload}
         />
@@ -220,7 +228,7 @@ const HomeScreen = () => {
       </CustomModal>
 
       {isMenuOpen && (
-                <LogoutMenu
+        <LogoutMenu
           isFoodStorage={false}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
@@ -234,6 +242,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    position: 'relative',
   },
   statsContainer: {
     padding: 15,
@@ -248,12 +257,13 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 10
   },
   statCard: {
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 15,
-    flex: 0.48,
+    flex: 1,
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -295,7 +305,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     flex: 1,
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -306,8 +315,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
-    width: '90%',
-    maxHeight: '80%',
+    width: '80%',
+    maxWidth: 400,
   },
 });
 
