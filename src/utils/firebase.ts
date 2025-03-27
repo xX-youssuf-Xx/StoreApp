@@ -26,13 +26,13 @@ export const attemptFirebaseUpdate = async (
 
 export const attemptFirebaseGet = async (
     database: FirebaseDatabaseTypes.Module, 
-    ref: string, 
+    ref: string,
     times: number
 ): Promise<FirebaseDatabaseTypes.DataSnapshot | typeof FIREBASE_ERROR> => {
     try {
         // Add options to always fetch from server
         const snapShot = await database.ref(ref).once('value', undefined, {
-            serverSideTimestamp: true
+            serverSideTimestamp: true,
         });
         return snapShot; 
     } catch (e) {

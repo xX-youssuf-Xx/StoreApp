@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, BackHandler} from 'react-native';
 import TopNav from '../../src/components/TopNav';
 import React, {useEffect, useState} from 'react';
@@ -96,32 +98,6 @@ const ClientsScreen = () => {
     }
   };
 
-  const getClientDetails = async (clientUuid: string) => {
-    try {
-      const client = await getClient(db!, clientUuid);
-      if (client) {
-        console.log('client');
-        console.log(client);
-      }
-    } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
-    }
-  };
 
   const getClientReceipts = async (clientUuid: string) => {
     try {
@@ -331,7 +307,7 @@ const ClientsScreen = () => {
             </View>
           )}
           <Text style={styles.clientReceipts}>الفواتير: {item.receiptsCount}</Text>
-          <Text style={styles.clientBalance}>الرصيد: {item.balance} ج.م</Text>
+          <Text style={styles.clientBalance}>الرصيد: {item.balance.toFixed(2)} ج.م</Text>
         </View>
         <View>
           <Text style={styles.clientName}>{item.name}</Text>

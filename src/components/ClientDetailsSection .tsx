@@ -15,7 +15,7 @@ const ClientDetailsSection = ({ client, onResetBalance }: { client: any, onReset
       <View style={styles.clientSummary}>
         {/* Top Row: Balance (left) | Client Name (right) */}
         <View style={styles.row}>
-          <Text style={styles.clientBalance}>{client.balance} ج.م</Text>
+          <Text style={styles.clientBalance}>{client.balance.toFixed(2)} ج.م</Text>
           <Text style={styles.clientName}>{client.name}</Text>
         </View>
 

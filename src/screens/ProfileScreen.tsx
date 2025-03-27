@@ -227,8 +227,8 @@ const ProfileScreen = () => {
               {/* Week Stats */}
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
-                <StatCard title="الربح" value={weekProfit} max={100000} />
-                <StatCard title="المبيعات" value={weekSales} max={1000000} />
+                <StatCard title="الربح" value={weekProfit} max={100000} showUnits={false} />
+                <StatCard title="المبيعات" value={weekSales} max={1000000} showUnits={false} />
               </View>
 
               {/* Month Stats */}
