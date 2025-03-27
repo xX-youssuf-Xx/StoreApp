@@ -1,6 +1,5 @@
 import {
   FirebaseDatabaseTypes,
-  serverTimestamp,
 } from '@react-native-firebase/database';
 import {
   FIREBASE_CREATING_ERROR,
@@ -15,8 +14,7 @@ import {
 } from './firebase';
 import {productsReceiptQuery, Receipt, ReceiptsType} from './types';
 import {getClient, updateClientBalance} from './clitent';
-import {getProduct, getProductItem} from './inventory';
-import storage from '@react-native-firebase/storage';
+import {getProductItem} from './inventory';
 import {updateAdminBalance} from './auth';
 
 export const getAllReceipts = async (
@@ -228,7 +226,7 @@ export const returnReceiptHelper = async (
 
     // Reverse the balance changes
     const reversedBalance =
-      client.balance - receipt.totalPrice + receipt.moneyPaid;
+      Math.floor(client.balance - receipt.totalPrice + receipt.moneyPaid);
     const balanceRes = await updateClientBalance(
       database,
       receipt.client,

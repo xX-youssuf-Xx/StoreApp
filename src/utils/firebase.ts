@@ -1,4 +1,4 @@
-import { FirebaseDatabaseTypes, set } from "@react-native-firebase/database";
+import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
 import { FIREBASE_ERROR } from "../config/Constants";
 
 export const attemptFirebaseUpdate = async (

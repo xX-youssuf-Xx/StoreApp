@@ -256,7 +256,7 @@ export const getMonthSales = async (
   let sales = 0;
 
   for (let key in receipts.val()) {
-    const receipt = receipts.val()[key] as Receipt;
+    const receipt = receipts.val()[key] as Receipt; 
     if (receipt.createdAt && receipt.status === 'active') {
       const now = new Date();
       const receiptDate = new Date(receipt.createdAt);
@@ -272,6 +272,7 @@ export const getMonthSales = async (
 
   return sales;
 };
+
 
 export const getLastMonthSales = async (
   database: FirebaseDatabaseTypes.Module,
@@ -324,9 +325,7 @@ export const getAllSales = async (
   for (let key in receipts.val()) {
     const receipt = receipts.val()[key] as Receipt;
     if (receipt.status === 'active') {
-      for (const product of Object.values(receipt.products)) {
-        sales += product.sellPrice * (product.totalWeight ?? 0);
-      }
+      sales += receipt.totalPrice;
     }
   }
 

@@ -127,7 +127,6 @@ const ProfileScreen = () => {
 
       const _allSales = await getAllSales(db!);
       if (_allSales !== null && _allSales !== undefined) {
-        console.log('allSales', _allSales);
         setAllSales(Math.floor(Number(_allSales)));
       }
     } catch (error) {

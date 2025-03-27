@@ -10,7 +10,6 @@ const ProtectedContent: React.FC<ProtectedContentProps> = ({ children }) => {
   const { showSecrets, setShowSecretPopup } = usePasswordProtection();
 
   const handlePress = () => {
-    console.log('showSecrets', showSecrets);
     if (!showSecrets) {
       setShowSecretPopup(true);
     }

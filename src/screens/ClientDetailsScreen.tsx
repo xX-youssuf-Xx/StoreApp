@@ -207,7 +207,7 @@ const ClientDetailsScreen = () => {
             الرصيد السابق: {item.initialBalance} ج.م
           </Text>
           <Text style={styles.receiptTotal}>
-            الإجمالي: {item.totalPrice} ج.م
+            الإجمالي: {Math.floor(item.totalPrice)} ج.م
           </Text>
         </View>
       </TouchableOpacity>

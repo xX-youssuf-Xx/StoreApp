@@ -1124,7 +1124,7 @@ const ReceiptDetails: React.FC<ReceiptDetailsProps> = ({
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryValue}>
-                  {receipt.totalPrice || 0} ج.م
+                  {Math.floor(receipt.totalPrice || 0)} ج.م
                 </Text>
                 <Text style={styles.summaryLabel}>إجمالي تكلفة المنتجات:</Text>
               </View>
