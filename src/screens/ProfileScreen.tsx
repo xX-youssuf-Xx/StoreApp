@@ -20,18 +20,27 @@ import { getPendingAdminBalance, getInventoryTotalPrice } from '../utils/auth';
 import ProtectedContent from '../components/ProtectedContent';
 import { usePasswordProtection } from '../context/PasswordProtectionContext';
 
-const StatCard = ({ title, value }: { title: string; value: number }) => (
-  <View style={styles.statCard}>
-    <Text style={styles.statTitle}>{title}</Text>
-    <Text style={styles.statValue}>{value} ج.م</Text>
-  </View>
-);
+const StatCard = ({ title, value, max, showUnits = true }: { title: string; value: number, max: number, showUnits?: boolean }) => {
+  const moduled = value - (Math.floor(value / max) * max);
+  const units = Math.floor(value / max);
+  return (
+    <View style={styles.statCard}>
+      <ProtectedContent>
+        <Text style={styles.statTitle}>{title}</Text>
+        <View style={styles.statValueContainer}>
+          <Text style={styles.statValue}>{moduled.toLocaleString()}</Text>
+          {showUnits && <Text style={styles.statValue}>{units.toString().length === 1 ? '0' + units : units}</Text>}
+        </View>
+      </ProtectedContent>
+    </View>
+  );
+}
 
 const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const { db } = useFirebase();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { showSecrets } = usePasswordProtection();
+  const { showSecrets, setShowSecretPopup } = usePasswordProtection();
 
   // Balance state
   const [pendingBalance, setPendingBalance] = useState(0);
@@ -118,6 +127,7 @@ const ProfileScreen = () => {
 
       const _allSales = await getAllSales(db!);
       if (_allSales !== null && _allSales !== undefined) {
+        console.log('allSales', _allSales);
         setAllSales(Math.floor(Number(_allSales)));
       }
     } catch (error) {
@@ -151,6 +161,12 @@ const ProfileScreen = () => {
   };
 
   useEffect(() => {
+    if (!showSecrets) {
+      setShowSecretPopup(true);
+    }
+  }, [showSecrets]);
+
+  useEffect(() => {
     if (showSecrets) {
       getBalance();
       getStats();
@@ -167,105 +183,79 @@ const ProfileScreen = () => {
         />
       )}
 
-      <TopNav
-        title="الحساب الشخصي"
-        onSettingsPress={handleSettingsPress}
-        onSearchChange={() => { }}
-        onBackPress={() => navigation.goBack()}
-        showBackButton={false}
-        showSearchIcon={false}
-      />
-      <ScrollView style={styles.container}>
-        {/* Balance Section */}
-        <View style={styles.topContainer}>
-          <View style={styles.balanceCard}>
-            <View style={styles.balanceContent}>
-              <ProtectedContent>
-                <Text style={styles.balanceTitle}>الباقي عند العملاء</Text>
-                <Text style={styles.balanceValue}>
-                  {Math.floor(pendingBalance)} ج.م
-                </Text>
-              </ProtectedContent>
-            </View>
-          </View>
+      {showSecrets && (
+        <>
+          <TopNav
+            title="الحساب الشخصي"
+            onSettingsPress={handleSettingsPress}
+            onSearchChange={() => { }}
+            onBackPress={() => navigation.goBack()}
+            showBackButton={false}
+            showSearchIcon={false}
+          />
+          <ScrollView style={styles.container}>
+            {/* Balance Section */}
+            <View style={styles.topContainer}>
+              <View style={styles.balanceCard}>
+                <View style={styles.balanceContent}>
+                  <ProtectedContent>
+                    <Text style={styles.balanceTitle}>الباقي عند العملاء</Text>
+                    <Text style={styles.balanceValue}>
+                      {Math.floor(pendingBalance).toLocaleString()}
+                    </Text>
+                  </ProtectedContent>
+                </View>
+              </View>
 
-          <View style={styles.balanceCard}>
-            <View style={styles.balanceContent}>
-              <ProtectedContent>
-                <Text style={styles.balanceTitle}>سعر بضاعة المخزن</Text>
-                <Text style={styles.balanceValue}>
-                  {Math.floor(inventoryTotalPrice)} ج.م
-                </Text>
-              </ProtectedContent>
-            </View>
-          </View>
+              <View style={styles.balanceCard}>
+                <View style={styles.balanceContent}>
+                  <ProtectedContent>
+                    <Text style={styles.balanceTitle}>سعر بضاعة المخزن</Text>
+                    <Text style={styles.balanceValue}>
+                      {Math.floor(inventoryTotalPrice).toLocaleString()}
+                    </Text>
+                  </ProtectedContent>
+                </View>
+              </View>
 
-          {/* Today's Stats */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
-            <View style={styles.statsRow}>
-              <ProtectedContent>
-                <StatCard title="الربح" value={todayProfit} />
-              </ProtectedContent>
-              <ProtectedContent>
-                <StatCard title="المبيعات" value={todaySales} />
-              </ProtectedContent>
-            </View>
-          </View>
+              {/* Today's Stats */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
+                <StatCard title="الربح" value={todayProfit} max={100000} showUnits={false} />
+                <StatCard title="المبيعات" value={todaySales} max={1000000} showUnits={false} />
+              </View>
 
-          {/* Week Stats */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
-            <View style={styles.statsRow}>
-              <ProtectedContent>
-                <StatCard title="الربح" value={weekProfit} />
-              </ProtectedContent>
-              <ProtectedContent>
-                <StatCard title="المبيعات" value={weekSales} />
-              </ProtectedContent>
-            </View>
-          </View>
+              {/* Week Stats */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>إحصائيات الأسبوع</Text>
+                <StatCard title="الربح" value={weekProfit} max={100000} />
+                <StatCard title="المبيعات" value={weekSales} max={1000000} />
+              </View>
 
-          {/* Month Stats */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
-            <View style={styles.statsRow}>
-              <ProtectedContent>
-                <StatCard title="الربح" value={monthProfit} />
-              </ProtectedContent>
-              <ProtectedContent>
-                <StatCard title="المبيعات" value={monthSales} />
-              </ProtectedContent>
-            </View>
-          </View>
+              {/* Month Stats */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>إحصائيات الشهر</Text>
+                <StatCard title="الربح" value={monthProfit} max={100000} />
+                <StatCard title="المبيعات" value={monthSales} max={1000000} />
+              </View>
 
-          {/* Last Month Stats */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
-            <View style={styles.statsRow}>
-              <ProtectedContent>
-                <StatCard title="الربح" value={lastMonthProfit} />
-              </ProtectedContent>
-              <ProtectedContent>
-                <StatCard title="المبيعات" value={lastMonthSales} />
-              </ProtectedContent>
-            </View>
-          </View>
+              {/* Last Month Stats */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>إحصائيات الشهر الماضي</Text>
+                <StatCard title="الربح" value={lastMonthProfit} max={100000} />
+                <StatCard title="المبيعات" value={lastMonthSales} max={1000000} />
+              </View>
 
-          {/* Total Stats */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
-            <View style={styles.statsRow}>
-              <ProtectedContent>
-                <StatCard title="إجمالي الربح" value={allProfit} />
-              </ProtectedContent>
-              <ProtectedContent>
-                <StatCard title="إجمالي المبيعات" value={allSales} />
-              </ProtectedContent>
+              {/* Total Stats */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>الإحصائيات الإجمالية</Text>
+                <StatCard title="إجمالي الربح" value={allProfit} max={100000} />
+                <StatCard title="إجمالي المبيعات" value={allSales} max={1000000} />
+              </View>
             </View>
-          </View>
-        </View>
-      </ScrollView>
+          </ScrollView>
+        </>
+      )}
     </>
   );
 };
@@ -301,6 +291,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4CAF50',
     marginBottom: 5,
+    textAlign: 'right',
   },
   balanceTitle: {
     fontSize: 18,
@@ -321,18 +312,25 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
-    alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
+    flex: 1,
   },
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#4CAF50',
     marginBottom: 5,
+    textAlign: 'center',
+  },
+  statValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
   },
   statTitle: {
     fontSize: 16,

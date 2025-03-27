@@ -25,12 +25,20 @@ import { useLoading } from '../context/LoadingContext';
 import { usePasswordProtection } from '../context/PasswordProtectionContext';
 import ProtectedContent from '../components/ProtectedContent';
 
-const StatCard = ({ title, value }: { title: string; value: number }) => (
-  <View style={styles.statCard}>
-    <Text style={styles.statTitle}>{title}</Text>
-    <Text style={styles.statValue}>{value} ج.م</Text>
-  </View>
-);
+const StatCard = ({ title, value, max }: { title: string; value: number, max: number }) => {
+  const { showSecrets } = usePasswordProtection();
+  const moduled = value - (Math.floor(value / max) * max);
+  // const units = Math.floor(value / max);
+  return (
+    <View style={styles.statCard}>
+      <Text style={styles.statTitle}>{title}</Text>
+      <View style={styles.statValueContainer}>
+        <Text style={styles.statValue}>{showSecrets ? moduled.toLocaleString() : '**'}</Text>
+        {/* {showSecrets && <Text style={styles.statValue}>{units.toString().length === 1 ? '0' + units : units}</Text>} */}
+      </View>
+    </View>
+  );
+};
 
 const ActionCard = ({ title, icon, onPress }: { title: string; icon: string; onPress: () => void }) => (
   <TouchableOpacity style={styles.actionCard} onPress={onPress}>
@@ -178,10 +186,10 @@ const HomeScreen = () => {
           <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
           <View style={styles.statsRow}>
             <ProtectedContent>
-              <StatCard title="الربح" value={todayProfit} />
+              <StatCard title="الربح" value={todayProfit} max={100000} />
             </ProtectedContent>
             <ProtectedContent>
-              <StatCard title="المبيعات" value={todaySales} />
+              <StatCard title="المبيعات" value={todaySales} max={1000000} />
             </ProtectedContent>
           </View>
         </View>
@@ -270,6 +278,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
+  },
+  statValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
   },
   statValue: {
     fontSize: 24,

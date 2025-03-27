@@ -58,7 +58,6 @@ export const getWeekProfit = async (
   const weekEnd = new Date();
   weekEnd.setDate(now.getDate() + 7 - ((now.getDay() + 1) % 7));
 
-  console.log('WEEK RECEIPTS');
   for (let key in receipts.val()) {
     const receipt = receipts.val()[key];
     if (receipt.createdAt && receipt.status === 'active') {
@@ -69,13 +68,11 @@ export const getWeekProfit = async (
         receiptDate.getTime() >= weekStart.getTime() &&
         receiptDate.getTime() < weekEnd.getTime()
       ) {
-        console.log(receipt);
         profit += receipt.totalPrice;
         profit -= receipt.totalBoughtPrice;
       }
     }
   }
-  console.log('END WEEK RECEIPTS');
 
   return profit;
 };

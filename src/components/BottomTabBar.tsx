@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
-
+import { usePasswordProtection } from '../context/PasswordProtectionContext';
 const BottomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+  const {setShowSecretPopup, setCanClose, showSecrets} = usePasswordProtection();
+
   return (
     <SafeAreaView style={styles.bottomBarContainer}>
       <View style={styles.tabBar}>
@@ -29,6 +31,15 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               key={route.name}
               onPress={() => {
                 if (!isFocused) {
+                  if (route.name === 'الحساب الشخصي') {
+                    setCanClose(false);
+                    if(!showSecrets) {
+                      setShowSecretPopup(true);
+                    }
+                  } else {
+                    setCanClose(true);
+                    setShowSecretPopup(false);
+                  }
                   navigation.navigate(route.name);
                   console.log(`navigated to ${route.name}`);
                 }

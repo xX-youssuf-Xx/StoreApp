@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, TouchableWithoutFe
 import { FirebaseError } from '../errors/FirebaseError';
 import { FIREBASE_ERROR } from '../config/Constants';
 import { showMessage } from 'react-native-flash-message';
-import bcrypt from 'react-native-bcrypt';
 import { getHashedAdminPassword } from '../utils/auth';
 import { useLoading } from './LoadingContext';
 import { useFirebase } from './FirebaseContext';
@@ -15,6 +14,7 @@ interface PasswordProtectionContextType {
   handleSecretSubmit: (db: any, onSuccess: () => void) => Promise<void>;
   secretPassword: string;
   setSecretPassword: (password: string) => void;
+  setCanClose: (canClose: boolean) => void;
 }
 
 const PasswordProtectionContext = createContext<PasswordProtectionContextType | undefined>(undefined);
@@ -27,6 +27,7 @@ export const PasswordProtectionProvider: React.FC<PasswordProtectionProviderProp
   const [showSecrets, setShowSecrets] = useState(false);
   const [showSecretPopup, setShowSecretPopup] = useState(false);
   const [secretPassword, setSecretPassword] = useState('');
+  const [canClose, setCanClose] = useState(true);
   const { setIsLoading } = useLoading();
   const { db } = useFirebase();
 
@@ -36,11 +37,11 @@ export const PasswordProtectionProvider: React.FC<PasswordProtectionProviderProp
         throw new FirebaseError(FIREBASE_ERROR);
       }
       setIsLoading(true);
-      const storedHash = await getHashedAdminPassword(db);
-      if (storedHash === false) {
+      const storedPass = await getHashedAdminPassword(db);
+      if (storedPass === false) {
         throw new FirebaseError(FIREBASE_ERROR);
       }
-      const isMatch = bcrypt.compareSync(secretPassword, storedHash);
+      const isMatch = secretPassword == storedPass;
 
       if (isMatch) {
         setShowSecrets(true);
@@ -73,12 +74,13 @@ export const PasswordProtectionProvider: React.FC<PasswordProtectionProviderProp
         handleSecretSubmit,
         secretPassword,
         setSecretPassword,
+        setCanClose,
       }}
     >
       {children}
       {showSecretPopup && (
-        <TouchableWithoutFeedback onPress={() => setShowSecretPopup(false)}>
-          <View style={styles.secretPopupContainer}>
+        <TouchableWithoutFeedback onPress={() => canClose ? setShowSecretPopup(false) : null}>
+          <View style={[styles.secretPopupContainer, !canClose ? { bottom: 62 } : {}]}>
             <TouchableWithoutFeedback onPress={(e) => { e.stopPropagation(); }}>
               <View style={styles.secretPopup}>
                 <Text style={styles.secretPopupTitle}>أدخل كلمة المرور</Text>
@@ -91,17 +93,17 @@ export const PasswordProtectionProvider: React.FC<PasswordProtectionProviderProp
                   placeholderTextColor="#999"
                 />
                 <View style={styles.secretButtonsContainer}>
-                  <TouchableOpacity
+                  {canClose && <TouchableOpacity
                     style={styles.secretButton}
                     onPress={() => setShowSecretPopup(false)}
                   >
                     <Text style={styles.secretButtonText}>إلغاء</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity>}
                   <TouchableOpacity
                     style={[styles.secretButton, styles.confirmButton]}
                     onPress={() => handleSecretSubmit()}
                   >
-                    <Text style={styles.secretButtonText}>تأكيد</Text>
+                    <Text style={[styles.secretButtonText, styles.confirmButtonText]}>تأكيد</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   secretPopup: {
     backgroundColor: 'white',
@@ -171,11 +173,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
   },
-  confirmButton: {
-    backgroundColor: '#4CAF50',
-  },
   secretButtonText: {
     fontSize: 16,
     color: '#333',
+  },
+  confirmButton: {
+    backgroundColor: '#27ae60',
+  },
+  confirmButtonText: {
+    color: '#fff',
   },
 });
