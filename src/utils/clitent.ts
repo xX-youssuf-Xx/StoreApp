@@ -1,4 +1,4 @@
-import { DataSnapshot, FirebaseDatabaseTypes } from "@react-native-firebase/database";
+import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
 import { attemptFirebaseGet, attemptFirebasePush, attemptFirebaseUpdate } from "./firebase";
 import { FIREBASE_CREATING_ERROR, FIREBASE_ERROR, REQUEST_LIMIT } from "../config/Constants";
 import { FirebaseError } from "../errors/FirebaseError";

@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
     textAlign: 'right',
+    color: '#000',
   },
   secretButtonsContainer: {
     flexDirection: 'row',

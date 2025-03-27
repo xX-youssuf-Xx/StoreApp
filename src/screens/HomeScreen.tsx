@@ -24,6 +24,7 @@ import Svg, { Path, Polyline, Line } from 'react-native-svg';
 import { useLoading } from '../context/LoadingContext';
 import { usePasswordProtection } from '../context/PasswordProtectionContext';
 import ProtectedContent from '../components/ProtectedContent';
+import { attemptFirebaseGet } from '../utils/firebase';
 
 const StatCard = ({ title, value, max }: { title: string; value: number, max: number }) => {
   const { showSecrets } = usePasswordProtection();
@@ -101,6 +102,14 @@ const HomeScreen = () => {
   const [todaySales, setTodaySales] = useState(0);
 
   const { showSecrets } = usePasswordProtection();
+
+  useEffect(() => {
+    const getClients = async () => {
+      const clients = await attemptFirebaseGet(db!, '/clients/-OKMMe194xwxjVLD-3Yw', 10);
+      console.log(clients);
+    }
+    getClients();
+  }, []); 
 
   const getTodayStats = async () => {
     try {
