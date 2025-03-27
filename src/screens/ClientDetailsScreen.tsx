@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl} from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
@@ -8,21 +9,15 @@ import {FIREBASE_ERROR} from '../config/Constants';
 import {showMessage} from 'react-native-flash-message';
 import {
   createReceiptHelper,
-  getAllReceipts,
   getReceipt,
 } from '../utils/receipts';
 import {
-  createClient,
-  getAllClients,
-  getClient,
   getClientReceiptsHelper,
 } from '../utils/clitent';
-import {productsReceiptQuery, ReceiptProduct, Receipt} from '../utils/types';
+import {Receipt} from '../utils/types';
 import ReceiptDetails from '../components/ReciptDetails';
 import AddButton from '../components/AddButton';
 import CreateReceipt from '../components/CreateReceipt';
-import Animated, { withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import Modal from 'react-native-modal';
 import ClientDetailsSection from '../components/ClientDetailsSection ';
 
@@ -40,7 +35,6 @@ type ClientDetailsRouteProp = RouteProp<
 >;
 
 const ClientDetailsScreen = () => {
-  const [modalVisible, setModalVisible] = useState(false);
   const [isReceiptDetailsVisible, setIsReceiptDetailsVisible] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [selectedReceiptUUid, setSelectedReceiptUUid] = useState<String | null>(
@@ -86,9 +80,9 @@ const ClientDetailsScreen = () => {
           .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime()); // Sort by date, newest first
 
         // Remove rawDate before setting state
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const receiptsForState = formattedReceipts.map(({ rawDate, ...rest }) => rest);
         setReceipts(receiptsForState);
-        console.log('formatted : ', receiptsForState);
       }
     } catch (error) {
       handleError(error);
@@ -106,48 +100,6 @@ const ClientDetailsScreen = () => {
       }
     } catch (error) {
       handleError(error);
-    }
-  };
-
-  const createReceipt = async (
-    clientUuid: string,
-    moneyPaid: number,
-    pdfPath: string,
-    uploadStateChange: (bytesTransferred: number, totalBytes: number) => void,
-    products?: productsReceiptQuery,
-  ) => {
-    try {
-      const receiptUuid = await createReceiptHelper(
-        db!,
-        clientUuid,
-        moneyPaid,
-        pdfPath,
-        uploadStateChange,
-        products,
-      );
-      if (receiptUuid) {
-        console.log('receiptUuid');
-        console.log(receiptUuid);
-        // JOE: SET THE receipt
-      }
-    } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === FIREBASE_ERROR) {
-          console.log('ERROR');
-          showMessage({
-            message: 'Success',
-            description: 'حدث خطأ ما , برجاء المحاولة مرة أخري لاحقا ',
-            type: 'success',
-            duration: 3000,
-            floating: true,
-            autoHide: true,
-          });
-        } else {
-          console.error('An error occurred with code:', error.code);
-        }
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
     }
   };
 
@@ -258,7 +210,7 @@ const ClientDetailsScreen = () => {
         showBackButton={true}
         showSearchIcon={false}
         onSettingsPress={function (): void {}}
-        onSearchChange={function (text: string): void {}}
+        onSearchChange={function (): void {}}
       />
       <View style={styles.container}>
       <ClientDetailsSection 

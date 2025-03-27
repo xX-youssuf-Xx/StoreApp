@@ -1,10 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database';
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
-import { useLoading } from './LoadingContext';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import { deleteItem, setItem } from '../utils/localStorage';
+import { deleteItem } from '../utils/localStorage';
 import { emptyActiveUser } from '../utils/auth';
-import Loading from '../components/Loading';
 import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
@@ -52,8 +51,10 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   useEffect(() => {
     const initializeDB = async () => {
       try {
-        // await database.setPersistenceEnabled(true);
-       // database.keepSynced(false); // This ensures data is always fetched from server
+        // Disable persistence
+        await database.setPersistenceEnabled(false);
+        // Ensure data is always fetched from server
+        await database.goOnline();
         setDb(database);
       } catch (error) {
         console.error('Error initializing database:', error);
